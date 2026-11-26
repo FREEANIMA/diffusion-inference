@@ -82,9 +82,10 @@ class SamplingEngine:
             dbg(init_out)
             print("========txt2img_input=============")
             dbg(txt2img_input)
-            print("========prompt=============")
-            print(txt2img_input.prompts)
-            print("===========================")
+            print("======== PROMPTS =========")
+            for i, prompt in enumerate(txt2img_input.prompts, start=1):
+                print(f'prompt_{i} = "{prompt}"')
+            print("==========================")
             print("===========================")
 
             self.model.eval()

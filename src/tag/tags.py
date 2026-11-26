@@ -118,12 +118,11 @@ class TagGenration:
                 else:
                     generation_list[idx] = dups
 
-            # NAS_SHORT 타입이 전부 있어야 통과
             pending = [idx for idx in pending if not short <= _types(generation_list[idx])]
             if not pending:
                 break
 
-            use_inference = True   # 실패했으면 다음 라운드부터 추론 강제
+            use_inference = True 
             missing = {idx: short - _types(generation_list[idx]) for idx in pending}
             log(self.console, f"tags generation retry {i + 1} / {attempts} missing: {missing}")
 

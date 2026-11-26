@@ -661,27 +661,6 @@ function renderTagBrowser(tags, query = '') {
     }
 }
 
-function initTagBrowser() {
-    const box = document.getElementById('t2i-tag-tree');
-    const search = document.getElementById('t2i-tag-search');
-
-    box.addEventListener('change', e => {
-        const cb = e.target.closest('input[type="checkbox"]');
-        if (!cb) return;
-        if (cb.checked) checkedTags.add(cb.value); else checkedTags.delete(cb.value);
-        toggleTagInPrompt(cb.value, cb.checked);
-    });
-
-    let timer;
-    search.addEventListener('input', () => {
-        clearTimeout(timer);
-        timer = setTimeout(() => tagCache && renderTagBrowser(tagCache, search.value), 150);
-    });
-
-    loadTags()
-        .then(tags => renderTagBrowser(tags))
-        .catch(err => { box.textContent = err.message; });
-}
 
 // ---- 프롬프트 자동완성 ----
 const ac = { box: null, items: [], idx: -1, ta: null };

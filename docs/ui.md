@@ -1,5 +1,9 @@
 ## UI
 
+**2026-11-27**
+UPDATE
+
+
 - Three tabs: **Text2img**, **Inpainting**, **Detailer**. The last tab is remembered, and `#txt2img`, `#inpainting`, `#detailer` in the URL open that tab directly.
 - **Tag Browser**: browse and search tags by type, and click to add them to the prompt.
 - **Tags autocomplete** and **History**: click a history entry to restore the input plus the expanded tags.

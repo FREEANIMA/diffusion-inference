@@ -1,5 +1,7 @@
 # Diffusion Text To Img
 
+# UI UPDATE
+
 [Update](CHANGELOG.md) · [Train State](docs/training.md) · [Architecture](docs/architecture.md) · [UI](docs/ui.md)
 
 ![sample_1](docs/imgs/sample.png)

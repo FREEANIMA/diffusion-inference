@@ -85,6 +85,7 @@ class SamplingEngine:
 
     
     def txt2img(self, txt2img_input:Txt2ImgInput, start_t=1.0, inpaint_ctx: InpaintCtx | None = None, on_step=None, on_preview=None, save_dir=state.config.GENERATION_DIR) -> tuple[list[Image.Image], list[Image.Image], list[float]]:
+        init_out = imgs = frames = sigmas_steps = x = latents = layer_stats_steps = None
         try:
             txt2img_input.prompts = self.llm.generation(
                 tags=txt2img_input.prompts, 

@@ -54,7 +54,7 @@ def mapping(generation_list, nsfw_text_list, size_text_list, init_text_list, unk
     for init, nsfw, size, text, others in zip(
         init_text_list, nsfw_text_list, size_text_list, texts, others_texts
     ):
-        row = " ".join(s.strip() for s in (init, nsfw, size, text, others) if s)
-        results.append(row)
+        row = " ".join(s.strip() for s in (init, nsfw, size, text, others) if s and s.strip())
+        results.append(row + " ")
 
     return results

@@ -1,6 +1,6 @@
 import threading
 import uuid
-
+import torch
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from api.schemas import SamplingRequest
@@ -34,15 +34,21 @@ def start_sampling(sampling: SamplingRequest, engine: Engine = Depends(get_engin
 
     job_id = uuid.uuid4().hex
     jobs[job_id] = {"status": "running", "step": 0, "total": sampling.steps,
-                    "images": None, "error": None}
+                    "images": None, "error": None,
+                    "preview": None, "preview_seq": 0}
 
     def work():
         def on_step(i, n):
             jobs[job_id].update(step=i, total=n)
+
+        def on_preview(i, n, im):
+            im.thumbnail((512, 512))
+            jobs[job_id]["preview"] = pil_to_b64(im)
+            jobs[job_id]["preview_seq"] += 1
+
         try:
             with gpu_lock:
-                imgs, _, _ = engine.txt2img(txt2img_input=txt2img_input,
-                                            inpaint_ctx=None, on_step=on_step)
+                imgs, _, _ = engine.txt2img(txt2img_input=txt2img_input, inpaint_ctx=None, on_step=on_step, on_preview=on_preview)
             jobs[job_id].update(status="done", images=[pil_to_b64(im) for im in imgs])
         except Exception as e:
             jobs[job_id].update(status="error", error=str(e))
@@ -51,10 +57,13 @@ def start_sampling(sampling: SamplingRequest, engine: Engine = Depends(get_engin
     return {"job_id": job_id}
 
 @router.get("/sampling/{job_id}")
-def get_sampling(job_id: str) -> dict:
+def get_sampling(job_id: str, seen: int = 0) -> dict:
     job = jobs.get(job_id)
     if job is None:
         raise HTTPException(status_code=404, detail="job not found")
+    out = {k: v for k, v in job.items() if k != "preview"}
+    if job["preview_seq"] > seen:
+        out["preview"] = job["preview"]
     if job["status"] != "running":
         jobs.pop(job_id, None)
-    return job
+    return out

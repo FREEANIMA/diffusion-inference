@@ -53,20 +53,37 @@ function showProgress(visible) {
     document.querySelector('.t2i-progress-wrap').classList.toggle('active', visible);
 }
 
+function showPreview(b64) {
+    const box = document.getElementById('t2i-image');
+    let img = box.querySelector('img.preview');
+    if (!img) {
+        box.innerHTML = '';
+        img = document.createElement('img');
+        img.className = 'preview';
+        img.style.maxWidth = '100%';
+        box.appendChild(img);
+    }
+    img.src = `data:image/png;base64,${b64}`;   // pil_to_b64가 PNG가 아니면 mime 수정
+}
+
 async function pollJob(jobId) {
+    let seen = 0;
     while (true) {
-        const res = await fetch(`${API_URL}/${jobId}`);
+        const res = await fetch(`${API_URL}/${jobId}?seen=${seen}`);
         if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
         const job = await res.json();
 
         setProgress(job.step, job.total);
+        if (job.preview) {
+            seen = job.preview_seq;
+            showPreview(job.preview);
+        }
 
         if (job.status === 'done') return job;
         if (job.status === 'error') throw new Error(job.error);
         await new Promise(r => setTimeout(r, POLL_INTERVAL_MS));
     }
 }
-
 /* ===== 생성 ===== */
 
 async function onGenerate() {

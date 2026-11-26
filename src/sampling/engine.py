@@ -48,6 +48,11 @@ class SamplingEngine:
 
         return imgs, frames
 
+
+    @torch.inference_mode()
+    def preview_decode(self, z: torch.Tensor) -> Image.Image:
+        return self.vae._tensor_to_pils(self.vae.decoder(z))[0]
+
     def save(self, imgs, frames, txt2img_input, save_dir):
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         out_dir = os.path.join(save_dir, ts)
@@ -60,8 +65,8 @@ class SamplingEngine:
             for b, frames_b in enumerate(frames):
                 save_video(os.path.join(out_dir, f"frames_{b}.mp4"), frames_b, fps=16)
 
-
-    def txt2img(self, txt2img_input:Txt2ImgInput, start_t=1.0, inpaint_ctx: InpaintCtx | None = None, on_step=None, save_dir=state.config.GENERATION_DIR) -> tuple[list[Image.Image], list[Image.Image], list[float]]:
+    
+    def txt2img(self, txt2img_input:Txt2ImgInput, start_t=1.0, inpaint_ctx: InpaintCtx | None = None, on_step=None, on_preview=None, save_dir=state.config.GENERATION_DIR) -> tuple[list[Image.Image], list[Image.Image], list[float]]:
         try:
             txt2img_input.prompts = self.llm.generation(
                 tags=txt2img_input.prompts, 
@@ -89,12 +94,17 @@ class SamplingEngine:
             print("===========================")
 
             self.model.eval()
+            def _on_preview(i, n, z):
+                on_preview(i, n, self.preview_decode(z))
+
             x, latents, sigmas_steps = sampling(
                 model=self.model,
                 txt2img_input=txt2img_input,
                 init_out=init_out,
                 inpaint_ctx=inpaint_ctx,
                 on_step=on_step,
+                on_preview=_on_preview if on_preview else None,
+                preview_every=4,
             )
 
             imgs, frames = self.vae_decode(x, latents, txt2img_input.frame_save)
@@ -108,7 +118,7 @@ class SamplingEngine:
             log(self.console, e)
             raise
 
-    def inpaint(self, txt2img_input:Txt2ImgInput, inpaint_input:InpaintInput, on_step=None) -> tuple[list[Image.Image], list[Image.Image], list[float]]:
+    def inpaint(self, txt2img_input:Txt2ImgInput, inpaint_input:InpaintInput, on_step=None, on_preview=None) -> tuple[list[Image.Image], list[Image.Image], list[float]]:
         if inpaint_input.crop_img is not None:
             img = inpaint_input.crop_img
         else:
@@ -152,7 +162,7 @@ class SamplingEngine:
                 mask=mask_lat.expand(B, -1, -1, -1)
             )
 
-            return self.txt2img(txt2img_input, start_t=inpaint_input.start_t, inpaint_ctx=ctx, on_step=on_step, save_dir=state.config.INPAINTING_DIR)
+            return self.txt2img(txt2img_input, start_t=inpaint_input.start_t, inpaint_ctx=ctx, on_step=on_step, on_preview=on_preview, save_dir=state.config.INPAINTING_DIR)
         
         except Exception as e:
             error_report(e, "inpaint")

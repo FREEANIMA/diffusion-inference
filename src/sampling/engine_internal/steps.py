@@ -28,8 +28,7 @@ def one_steps(model: MMDIT, x, init_out: InitOutput, sigma, cfg) -> torch.Tensor
     return v
 
 
-def sampling(model, txt2img_input: Txt2ImgInput, init_out: InitOutput,
-             inpaint_ctx: InpaintCtx = None, on_step=None):
+def sampling(model, txt2img_input: Txt2ImgInput, init_out: InitOutput, inpaint_ctx: InpaintCtx = None, on_step=None, on_preview=None, preview_every=4):
     model.eval()
     sigmas = init_out.sigmas
     n = len(sigmas) - 1
@@ -153,6 +152,9 @@ def sampling(model, txt2img_input: Txt2ImgInput, init_out: InitOutput,
         # x0_hat 기록
         x_in0, v0 = first_v[0]
         x0_hat = x_in0 - sigma * v0
+
+        if on_preview and (i % preview_every == 0 or last):
+            on_preview(i + 1, n, x0_hat[:1].detach())
 
         if clamp_known is not None:
             x = clamp_known(x, sigma_next)

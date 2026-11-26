@@ -1,22 +1,45 @@
 /* inpainting.css — inpainting 전용 */
 @import '../common/common.css';
 
-/* ===== 오른쪽: 번호 / 편집기(또는 결과) / 도구 / 버튼 ===== */
+/* ===== 오른쪽: 번호 / 진행바 / 편집기(또는 결과) / 도구 / 버튼 ===== */
 .page-txt2img .t2i-viewer {
     display: grid;
-    grid-template-rows: auto minmax(0, 1fr) auto auto;
+    grid-template-rows: auto auto minmax(0, 1fr) auto auto;
     gap: 0.6rem;
 }
 
-/* 편집기와 결과는 같은 칸(2행)을 번갈아 씀 */
+/* 편집기와 결과는 같은 칸(3행)을 번갈아 씀 */
 .page-txt2img .inp-stage,
 .page-txt2img .t2i-viewer .t2i-image {
-    grid-row: 2;
+    grid-row: 3;
 }
 
 /* display 지정이 hidden 속성을 이기지 않도록 */
 .page-txt2img .t2i-viewer [hidden] {
     display: none !important;
+}
+
+/* ----- 진행바 ----- */
+.page-txt2img .t2i-progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    visibility: hidden;             /* 평소엔 자리만 차지하고 안 보이게 */
+}
+
+.page-txt2img .t2i-progress-wrap.active {
+    visibility: visible;
+}
+
+.page-txt2img .t2i-progress-wrap progress {
+    flex: 1;
+    height: 0.6rem;
+}
+
+.page-txt2img .t2i-progress-text {
+    min-width: 4.5rem;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
 }
 
 /* ----- 편집기 ----- */

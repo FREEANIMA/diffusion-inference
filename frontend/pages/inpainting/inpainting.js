@@ -2,17 +2,17 @@
  * Mask: 좌클릭 = 수정(빨강), 우클릭 = 보존(파랑)   Eraser: 좌/우클릭 드래그로 지움 (Mask 상태에서 Alt+드래그도 지우개)
  * 서버로 보내는 마스크: 빨강(수정)이 있으면 빨강만 수정 / 빨강이 없으면 (크롭 있으면 크롭, 없으면 이미지) 전체를 수정하되 파랑(보존)만 제외
  * Crop(선택): W, H는 32의 배수. 크롭하면 그 영역으로 확대됨. 안 해도 전송 가능
- * Generate 후: 이미지판이 수정된 이미지로 바뀜. 위쪽 번호(prompt)로 결과 전환, Compare로 원본과 비교
+ * Generate 후: 진행바가 차오르고, 끝나면 이미지판이 수정된 이미지로 바뀜. 위쪽 번호(prompt)로 결과 전환, Compare로 원본과 비교
  * 확대/이동: 휠 = 확대/축소, 가운데 버튼(또는 Space + 드래그) = 이동
  */
-import { initCommon, collectCommon, toSamplingRequest, postJSON } from '../common/common.js';
+import { initCommon, collectCommon, toSamplingRequest, postJSON, API_BASE } from '../common/common.js';
 
 const GRID = 32;                 // W, H 모두 32의 배수
 const MAX_CROP = 1024;           // 크롭 최대 크기 (W, H 각각)
 const COLOR = { edit: '#ff3b30', keep: '#2f6bff' };
-import { API_BASE } from '../common/common.js';
 const API_URL = `${API_BASE}/api/inpainting`;
-const USE_MOCK = false;          // true: 전송 후 가짜 결과를 이미지판에 띄워 화면(번호 전환/Compare) 테스트
+const POLL_INTERVAL_MS = 300;    // 진행률 확인 간격
+const USE_MOCK = false;          // true: 서버 없이 가짜 결과를 이미지판에 띄워 화면(번호 전환/Compare) 테스트
 
 // W, H가 모두 32의 배수여야 함
 // 예) 32×64, 64×96, 64×192 ✔ / 50×64 ✘
@@ -557,6 +557,36 @@ function bind() {
     resize();
 }
 
+// ===================== 진행률 =====================
+// 요소가 없으면 그냥 넘어감 (생성 중에 다른 탭으로 간 경우)
+function setProgress(step, total) {
+    const bar = $('t2i-progress');
+    const text = $('t2i-progress-text');
+    if (!bar || !text) return;
+    bar.max = total || 1;
+    bar.value = step;
+    text.textContent = total ? `${step} / ${total}` : '';
+}
+
+function showProgress(visible) {
+    document.querySelector('.t2i-progress-wrap')?.classList.toggle('active', visible);
+}
+
+// job이 끝날 때까지 진행률을 갱신하며 기다림. 끝나면 job({ images, ... })을 돌려줌
+async function pollJob(jobId) {
+    while (true) {
+        const res = await fetch(`${API_URL}/${jobId}`);
+        if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+        const job = await res.json();
+
+        setProgress(job.step, job.total);
+
+        if (job.status === 'done') return job;
+        if (job.status === 'error') throw new Error(job.error);
+        await new Promise(r => setTimeout(r, POLL_INTERVAL_MS));
+    }
+}
+
 // ===================== 생성 / 업스케일 =====================
 // 크롭이 있으면 크롭 영역, 없으면 원본 전체 (크기 검증은 크롭 도구가 이미 보장하므로 여기선 막지 않음)
 function currentRect() {
@@ -601,7 +631,7 @@ function buildInpainting(params) {
     };
 }
 
-// 요청만 보냄 (응답 처리는 아직 안 함). prompt 하나당 요청 하나, 순서대로
+// 요청을 보내고 job_id를 돌려받음. 결과는 pollJob으로 기다림
 // body = { sampling: SamplingRequest, inpainting: InPaintingRequest }  — 파라미터와 이미지/마스크를 분리
 // sampling.width/height = 생성 크기 (크롭이 있으면 크롭 크기, 없으면 원본 크기)
 async function sendInpaint(params, r, inpainting) {
@@ -609,10 +639,10 @@ async function sendInpaint(params, r, inpainting) {
         sampling: toSamplingRequest(params, params.prompts, { width: r.w, height: r.h }),
         inpainting,
     };
-    await postJSON(API_URL, body);
+    return postJSON(API_URL, body);                   // { job_id }
 }
 
-// 서버 응답 이미지(URL/data URL 배열, prompt 순서)를 이미지판에 반영. 응답 처리를 붙일 때 호출
+// 서버 응답 이미지(URL/data URL 배열, prompt 순서)를 이미지판에 반영
 async function showResults(urls, r) {
     const imgs = await Promise.all(urls.map(loadImage));
     S.results = imgs.map(img => ({ img, rect: { ...r } }));   // 결과마다 어느 영역의 결과인지 같이 저장
@@ -620,7 +650,6 @@ async function showResults(urls, r) {
     if (!cv || !cv.isConnected) return;       // 다른 탭으로 갔다면 상태만 저장
     syncCur();
     setResultView(true);                      // 이미지판을 수정된 이미지로 교체
-    setStatus(`${imgs.length}개 생성됨`);
 }
 
 async function onGenerate() {
@@ -630,20 +659,32 @@ async function onGenerate() {
 
     const params = collectCommon();     // prompts, steps, cfg, seed, sigmas, cfgs, etas, styles
     const btn = $('t2i-generate');
-    btn.disabled = true;                // 보내는 동안 중복 클릭 방지
+    btn.disabled = true;                // 생성하는 동안 중복 클릭 방지
+    setProgress(0, 0);
+    showProgress(true);
     setStatus('Sending...');
     try {
         const { inpainting, hasRed } = buildInpainting(params);
-        await sendInpaint(params, r, inpainting);
-        setStatus(`${params.prompts.length}개 요청 전송됨` +
+
+        let urls;
+        if (USE_MOCK) {
+            urls = await mockInpaint({ prompts: params.prompts, crop: r });
+        } else {
+            const { job_id } = await sendInpaint(params, r, inpainting);
+            setStatus('Generating...');
+            const data = await pollJob(job_id);
+            urls = data.images.map(img => `data:image/png;base64,${img}`);
+        }
+
+        await showResults(urls, r);
+        setStatus(`${urls.length}개 생성됨` +
             (hasRed ? '' : ` — 빨강 마스크 없음: ${S.crop ? '크롭' : '이미지'} 전체 수정, 파랑 영역만 보존`) +
             sizeWarn);
-        // TODO: 응답 이미지가 오면 showResults(urls, r) 호출
-        if (USE_MOCK) await showResults(await mockInpaint({ prompts: params.prompts, crop: r }), r);
     } catch (err) {
         setStatus(err.message, true);
     } finally {
         btn.disabled = false;
+        showProgress(false);
     }
 }
 

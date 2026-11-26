@@ -108,18 +108,22 @@ class SamplingEngine:
             log(self.console, e)
             raise
 
-    def inpaint(self, txt2img_input:Txt2ImgInput, inpaint_input:InpaintInput) -> tuple[list[Image.Image], list[Image.Image], list[float]]:
+    def inpaint(self, txt2img_input:Txt2ImgInput, inpaint_input:InpaintInput, on_step=None) -> tuple[list[Image.Image], list[Image.Image], list[float]]:
+        crop_check = False
         if inpaint_input.crop_img is not None:
             img = inpaint_input.crop_img
         else:
             img = inpaint_input.img
+            crop_check=True
 
         origin_img = inpaint_input.img
+
+        img_side = max(H, W)
 
         try:
             arr, H, W = arr_resize(
                 np.asarray(img.convert('RGB')),
-                1024,
+                max(1024, img_side),
                 state.config.patch_size,
                 state.config.compression_ratio,
                 upscale=inpaint_input.upscale
@@ -149,7 +153,7 @@ class SamplingEngine:
                 mask=mask_lat.expand(B, -1, -1, -1)
             )
 
-            return self.txt2img(txt2img_input, start_t=inpaint_input.start_t, inpaint_ctx=ctx)
+            return self.txt2img(txt2img_input, start_t=inpaint_input.start_t, inpaint_ctx=ctx, on_step=on_step)
         
         except Exception as e:
             error_report(e, "inpaint")

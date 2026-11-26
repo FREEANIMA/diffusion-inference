@@ -10,7 +10,6 @@ from src.sampling import Engine
 from services import load_tags
 from api.routes import inpainting, sampling, tag_browser
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.engine = Engine(console=None)
@@ -28,7 +27,6 @@ class SPAStaticFiles(StaticFiles):
             if e.status_code == 404 and not is_file and not path.startswith("api"):
                 return await super().get_response("index.html", scope)
             raise
-
 
 app = FastAPI(lifespan=lifespan)
 

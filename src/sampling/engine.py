@@ -27,7 +27,7 @@ class SamplingEngine:
 
         self.llm:TagGenration = TagGenration(console=console)
 
-        download_model(config=state.config, filename="ema_model.pt")
+        download_model(config=state.config, filename=state.config.EMA_FILENAME)
         self.model:MMDIT = load_ema_only(
             config=state.config,
             network=MMDIT,

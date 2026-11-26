@@ -1,6 +1,6 @@
 {
     "CKPT_REPO_ID" : "honghong3",
-    "GENERATION_DIR": "generaion",
+    "GENERATION_DIR": "generation",
     "INPAINTING_DIR": "inpaint",
     "DETAIL_DIR": "detail",
     "ERROR_REPORT": "error_report",

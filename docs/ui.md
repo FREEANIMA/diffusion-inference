@@ -1,8 +1,23 @@
 ## UI
 
-**2026-11-27**
-UPDATE
+## UI Update
 
+- **Multi-prompt** support
+- **Custom schedulers**
+  - Sigma scheduler (CDF-based)
+  - CFG scheduler
+  - Eta scheduler
+- **Click-button revision**
+
+## Screenshots
+
+### Sampling
+![Sampling UI](docs/imgs/new_ui.png)
+
+### Inpainting
+![Inpainting UI](docs/imgs/new_ui_2.png)
+
+---
 
 - Three tabs: **Text2img**, **Inpainting**, **Detailer**. The last tab is remembered, and `#txt2img`, `#inpainting`, `#detailer` in the URL open that tab directly.
 - **Tag Browser**: browse and search tags by type, and click to add them to the prompt.
@@ -11,18 +26,6 @@ UPDATE
 - Only one job runs at a time. Generation runs in a background thread and the browser polls for the result, so long jobs do not hit proxy timeouts.
 
 ### UI
-- **Sampling**
-
-<img src="assets/sampling.png" controls width="600">
-
-- **Inpainting**
-
-<img src="assets/inpainting.png" controls width="600">
-
-- **Result**
-
-<img src="assets/inpaintbf.png" controls width="600">
-
 ## Detailing & Inpainting
 
 Both tabs share the same mask painter with two layers.

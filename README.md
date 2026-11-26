@@ -1,6 +1,21 @@
-# Diffusion Text To Img
+# Diffusion Text-to-Image
 
-# UI UPDATE
+## UI Update
+
+- **Multi-prompt** support
+- **Custom schedulers**
+  - Sigma scheduler (CDF-based)
+  - CFG scheduler
+  - Eta scheduler
+- **Click-button revision**
+
+## Screenshots
+
+### Sampling
+![Sampling UI](docs/imgs/new_ui.png)
+
+### Inpainting
+![Inpainting UI](docs/imgs/new_ui_2.png)
 
 [Update](CHANGELOG.md) · [Train State](docs/training.md) · [Architecture](docs/architecture.md) · [UI](docs/ui.md)
 

@@ -595,14 +595,6 @@ let tagCache = null;                 // [{tag, type, dup, count}, ...] (서버�
 const checkedTags = new Set();       // 페이지를 옮겨도 체크 상태 유지
 let lastPrompt = null;               // 마지막으로 포커스한 프롬프트 칸
 
-async function loadTags() {
-    if (tagCache) return tagCache;
-    const res = await fetch(`${API_BASE}/api/tags`);
-    if (!res.ok) throw new Error(`tags 로드 실패 (${res.status})`);
-    tagCache = await res.json();
-    return tagCache;
-}
-
 // ---- 프롬프트에 태그 넣기/빼기 ----
 function targetPrompt() {
     if (lastPrompt && document.body.contains(lastPrompt)) return lastPrompt;

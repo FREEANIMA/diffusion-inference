@@ -17,15 +17,15 @@ const ALLOWED = new Set(['t', ...MATH_NAMES]);
 // plot 기본값
 const curves = {
     sigma: {
-        expr: '16*(1-t)^2*t^2', isPdf: true, ymin: 0, ymax: 1, values: [], pdf: [],
+        expr: 'sin(pi*(0.7 + t*3)/5)', isPdf: true, ymin: 0, ymax: 1, values: [], pdf: [],
         hint: 'Enter a density (pdf). Output is its CDF: σ = 1 − CDF. Var: t',
     },
     cfg: {
-        expr: '16*(1-t)^2*t^2', ymin: 0, ymax: 1, values: [],
+        expr: 'max(0, sin(pi*(0.5 + 2*t)/3))', ymin: 0, ymax: 1, values: [],
         hint: 'Plot range is 0–1. Final CFG = cfg × plot. Var: t',
     },
     eta: {
-        expr: '16*(1-t)^2*t^2*0.1', ymin: 0, ymax: 0.5, values: [],
+        expr: 'max(0, sin(pi*(0.5 + 2*t)/3)) * 0.1', ymin: 0, ymax: 0.5, values: [],
         hint: 'Used as-is per step (0–0.5). Var: t',
     },
 };

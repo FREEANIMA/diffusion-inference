@@ -1,3 +1,19 @@
+## UPDATE 2027-11-27
+## UI Update
+UI -> CLICK
+
+## Backend
+
+- Migrated the backend to **FastAPI**
+- Sampling / inpainting run as background jobs (progress polling, live preview, cancel)
+- Run: `uvicorn main:app --reload`
+
+## Checkpoint
+
+- Switched checkpoint format to **safetensors** (previously `.pt`)
+
+---
+
 ## Update — 2026.11.20 Sampling: ETA injection equation selection & per-step latent → frame save
 
 <img src="assets/eta_frame.png" alt="update" width="50%">

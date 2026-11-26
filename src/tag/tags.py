@@ -133,5 +133,5 @@ class TagGenration:
         nsfw_text_list = [f"nsfw: {str(n).lower()}; " for n in nsfw]
         size_text_list = [f"size: {H}x{W}; " for _ in nsfw]
         init_text_list = [state.config.init_prompt for _ in nsfw]
-
+        
         return mapping(generation_list, nsfw_text_list, size_text_list, init_text_list, unks_list, self.NAS, self.type_map)

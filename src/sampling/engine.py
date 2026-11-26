@@ -139,6 +139,8 @@ class SamplingEngine:
         except Exception as e:
             error_report(e, "txt2img")
             log(self.console, e)
+        finally:
+            del txt2img_input, init_out, imgs, frames, sigmas_steps, x, latents, layer_stats_steps, inpaint_ctx
             gc.collect()
             if torch.cuda.is_available():
                 torch.cuda.synchronize()

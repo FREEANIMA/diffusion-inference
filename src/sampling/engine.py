@@ -14,7 +14,7 @@ import json
 import numpy as np
 from src.sampling.engine_internal import (
     Txt2ImgInput, InitOutput, InpaintInput, InpaintCtx,
-    setup_init, sampling, arr_resize, mask_generation, save_img, save_video, save_attention_plot, save_attention_json, to_jsonable
+    setup_init, sampling, arr_resize, mask_generation, save_img, save_video, save_attention_plot, save_attention_json, to_jsonable, merge_img
 )
 
 class SamplingEngine:
@@ -92,7 +92,7 @@ class SamplingEngine:
                 layer_stats_steps,
                 os.path.join(out_dir, "attention_strength.json")
             )
-            
+
     def txt2img(self, txt2img_input:Txt2ImgInput, start_t=1.0, inpaint_ctx: InpaintCtx | None = None, on_step=None, on_preview=None, save_dir=state.config.GENERATION_DIR) -> tuple[list[Image.Image], list[Image.Image], list[float]]:
         init_out = imgs = frames = sigmas_steps = x = latents = layer_stats_steps = None
         try:
@@ -161,6 +161,7 @@ class SamplingEngine:
                 torch.cuda.empty_cache()
 
     def inpaint(self, txt2img_input:Txt2ImgInput, inpaint_input:InpaintInput, on_step=None, on_preview=None) -> tuple[list[Image.Image], list[Image.Image], list[float]]:
+        origin_img = inpaint_input.img
         if inpaint_input.crop_img is not None:
             img = inpaint_input.crop_img
         else:
@@ -202,7 +203,13 @@ class SamplingEngine:
                 mask=mask_lat.expand(B, -1, -1, -1)
             )
 
-            return self.txt2img(txt2img_input, start_t=inpaint_input.start_t, inpaint_ctx=ctx, on_step=on_step, on_preview=on_preview, save_dir=state.config.INPAINTING_DIR)
+            latents = self.txt2img(txt2img_input, start_t=inpaint_input.start_t, inpaint_ctx=ctx, on_step=on_step, on_preview=on_preview, save_dir=state.config.INPAINTING_DIR)
+
+            if inpaint_input.crop_img is not None:
+                crop_img = self.preview_decode(latents)
+                img = merge_img(origin_img=origin_img, crop_img=crop_img, box=inpaint_input.crop_box)
+                
+            return img
         
         except Exception as e:
             error_report(e, "inpaint")

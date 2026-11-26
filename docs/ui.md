@@ -13,13 +13,13 @@
 
 ### Sampling
 
-![Sampling UI](docs/imgs/new_ui.png)
+![Sampling UI](imgs/new_ui.png)
 
 ### Inpainting
 
-![Inpainting UI](docs/imgs/new_ui_2.png)
+![Inpainting UI](imgs/new_ui_2.png)
 
-![Compare](docs/imgs/new_ui_3.png)
+![Compare](imgs/new_ui_3.png)
 
 ---
 

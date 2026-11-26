@@ -60,4 +60,4 @@ Please check the version in [version.py](version.py).
 
 ---
 
-- **GITHUB link** https://github.com/FREEANIMA/DiffusionSampling.git
+- **GITHUB link** https://github.com/FREEANIMA/diffusion-inference.git

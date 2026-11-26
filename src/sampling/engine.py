@@ -224,7 +224,7 @@ class SamplingEngine:
                 ]
                 self.save(imgs=imgs, save_dir=save_dir, only_img=True)
 
-            return img
+            return imgs, frames, sigmas
         
         except Exception as e:
             error_report(e, "inpaint")

@@ -86,13 +86,18 @@ def img_to_bytes(img, ext=".png"):
 # ============================================================================= #
 # img merge delicated detail
 
-def merge_img(origin_img, crop_img, box):
-    x, y, w, h = box
-    if crop_img.shape[:2] != (h, w):
-        crop_img = cv2.resize(crop_img, (w, h), interpolation=cv2.INTER_AREA)  # 줄이기
+from PIL import Image, ImageFilter
 
-    out = origin_img.copy()
-    out[y:y+h, x:x+w] = crop_img
+def merge_img(origin_img: Image.Image, crop_img: Image.Image, box, mask: Image.Image, feather: int = 8) -> Image.Image:
+    x, y, w, h = box
+    crop_img = crop_img.convert("RGB").resize((w, h), Image.Resampling.LANCZOS)
+
+    m = mask.convert("L").crop((x, y, x + w, y + h))   # mask는 원본 크기 마스크
+    if feather:
+        m = m.filter(ImageFilter.GaussianBlur(feather))
+
+    out = origin_img.convert("RGB").copy()
+    out.paste(crop_img, (x, y), m)
     return out
 
 

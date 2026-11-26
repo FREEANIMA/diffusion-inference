@@ -1,10 +1,13 @@
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
 from .Rope2D import Rope2D
 
+
 class Block(nn.Module):
-    def __init__(self, hidden_size, nhead, dim_feedforward, rope:Rope2D, dropout, **kwargs):
+    def __init__(self, hidden_size, nhead, dim_feedforward, rope: Rope2D, dropout, **kwargs):
         super().__init__()
 
         self.nhead = nhead
@@ -51,14 +54,56 @@ class Block(nn.Module):
     def _split_heads(self, x):
         b, n, _ = x.shape
         return x.view(b, n, self.nhead, self.head_dim).transpose(1, 2)
-            
-    def joint_attention(self, img_norm, txt_norm, H=None, W=None, attn_mask=None, attn_collects_stats=False):
+
+    def collect_attention_stats(self, attn, n_img, img_indices, txt_mask=None):
+        # Image -> Image
+        img_attn = attn.index_select(-2, img_indices)
+
+        img_img = (
+            img_attn.index_select(-1, img_indices)
+            .sum(dim=-1)
+            .mean(dim=(1, 2))
+        )
+
+        # Image -> Text
+        img_txt = (
+            img_attn[..., n_img:]
+            .sum(dim=-1)
+            .mean(dim=(1, 2))
+        )
+
+        # Text -> Image
+        txt_attn = attn[..., n_img:, :]
+        txt_img = txt_attn.index_select(-1, img_indices).sum(dim=-1)
+
+        if txt_mask is not None:
+            mask = txt_mask[:, None, :].to(txt_img.dtype)
+
+            txt_img = (txt_img * mask).sum(dim=(1, 2))
+            txt_img = txt_img / (
+                mask.sum(dim=(1, 2)) * self.nhead
+            ).clamp_min(1)
+        else:
+            txt_img = txt_img.mean(dim=(1, 2))
+
+        return {
+            "img_img": img_img.detach(),
+            "img_txt": img_txt.detach(),
+            "txt_img": txt_img.detach(),
+        }
+
+    def joint_attention(
+        self, img_norm, txt_norm, H=None, W=None,
+        attn_mask=None, txt_mask=None,
+        img_indices=None, attn_collects_stats=False
+    ):
         B, N_img, _ = img_norm.shape
-        B, N_txt, _ = txt_norm.shape
+        _, N_txt, _ = txt_norm.shape
 
         q_img, k_img, v_img = self.img_qkv(img_norm).chunk(3, dim=-1)
         q_img, k_img, v_img = map(self._split_heads, (q_img, k_img, v_img))
         q_img, k_img = self.img_q_norm(q_img), self.img_k_norm(k_img)
+
         q_img, k_img = self.rope.forward(
             q=q_img,
             k=k_img,
@@ -74,49 +119,79 @@ class Block(nn.Module):
         K = torch.cat([k_img, k_txt], dim=2)
         V = torch.cat([v_img, v_txt], dim=2)
 
-        attn_weights = None
+        attn_stats = None
+
         if attn_collects_stats:
             scale = 1.0 / (self.head_dim ** 0.5)
             scores = (Q.float() @ K.float().transpose(-2, -1)) * scale
+
             if attn_mask is not None:
                 scores = scores + attn_mask.float()
+
             attn_weights = scores.softmax(dim=-1)
+
+            attn_stats = self.collect_attention_stats(
+                attn_weights,
+                N_img,
+                img_indices,
+                txt_mask
+            )
+
             attn_out = attn_weights.to(V.dtype) @ V
+
+            del scores, attn_weights
+
         else:
             if attn_mask is not None:
                 attn_mask = attn_mask.to(dtype=Q.dtype)
 
             attn_out = F.scaled_dot_product_attention(
-                Q, K, V,
-                attn_mask=attn_mask, 
-                dropout_p=0.0 # fixed
+                Q,
+                K,
+                V,
+                attn_mask=attn_mask,
+                dropout_p=0.0
             )
 
-        attn_out = attn_out.transpose(1, 2).reshape(B, N_img + N_txt, self.hidden_size)
+        attn_out = attn_out.transpose(1, 2).reshape(
+            B,
+            N_img + N_txt,
+            self.hidden_size
+        )
+
         img_out = attn_out[:, :N_img]
         txt_out = attn_out[:, N_img:]
+
         attn_img = self.img_out_proj(img_out)
         attn_txt = self.txt_out_proj(txt_out)
 
-        return attn_img, attn_txt, attn_weights
-    
-    def forward(self, img_emb: torch.Tensor, vec: torch.Tensor,  txt_emb: torch.Tensor=None, H=None, W=None, attn_mask=None, collects_stats=False, attn_collects_stats=False):
+        return attn_img, attn_txt, attn_stats
+
+    def forward(
+        self, img_emb: torch.Tensor, vec: torch.Tensor, txt_emb: torch.Tensor = None, H=None,  W=None,
+        attn_mask=None, txt_mask=None,
+        img_indices=None, collects_stats=False, attn_collects_stats=False
+    ):
         (shift_msa_i, scale_msa_i, gate_msa_i,
          shift_mlp_i, scale_mlp_i, gate_mlp_i) = self.adaLN_modulation_img(vec).chunk(6, dim=-1)
 
         (shift_msa_t, scale_msa_t, gate_msa_t,
          shift_mlp_t, scale_mlp_t, gate_mlp_t) = self.adaLN_modulation_txt(vec).chunk(6, dim=-1)
-                
+
         if collects_stats:
             origin_img_std = img_emb.std().item()
 
         img_norm = self.img_norm(img_emb) * (1 + scale_msa_i[:, None, :]) + shift_msa_i[:, None, :]
         txt_norm = self.txt_norm(txt_emb) * (1 + scale_msa_t[:, None, :]) + shift_msa_t[:, None, :]
-    
-        attn_img, attn_txt, attn_weights = self.joint_attention(
-            img_norm, txt_norm, 
-            H=H, W=W, 
-            attn_mask=attn_mask, 
+
+        attn_img, attn_txt, attn_stats = self.joint_attention(
+            img_norm,
+            txt_norm,
+            H=H,
+            W=W,
+            attn_mask=attn_mask,
+            txt_mask=txt_mask,
+            img_indices=img_indices,
             attn_collects_stats=attn_collects_stats
         )
 
@@ -132,6 +207,7 @@ class Block(nn.Module):
         txt_emb = txt_emb + gate_mlp_t[:, None, :] * self.dropout(txt_ffn_out)
 
         stats = {}
+
         if collects_stats:
             stats = {
                 "origin_img": origin_img_std,
@@ -139,6 +215,6 @@ class Block(nn.Module):
             }
 
         if attn_collects_stats:
-            stats["attn_weights"] = attn_weights.detach()
+            stats["attn"] = attn_stats
 
         return img_emb, txt_emb, stats

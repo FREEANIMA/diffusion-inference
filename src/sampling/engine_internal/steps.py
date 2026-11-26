@@ -160,7 +160,18 @@ def sampling(model: MMDIT, txt2img_input: Txt2ImgInput, init_out: InitOutput, in
         # History
         sigmas_steps.append(sigma_next)
         latents.append(x0_hat)
-        layer_stats_steps.append(first_stats[0])
+
+        step_stats = {}
+
+        for layer, stats in first_stats[0].items():
+            step_stats[layer] = {
+                "attn": {
+                    key: value.detach().cpu()
+                    for key, value in stats["attn"].items()
+                } if stats.get("attn") is not None else None
+            }
+
+        layer_stats_steps.append(step_stats)
 
         # Logging
         tqdm.write(

@@ -139,57 +139,48 @@ def save_json(path, data):
         raise
 
 
-def save_attention_plot(layer_stats_steps, save_path, h, w, max_side):
+def save_attention_plot(layer_stats_steps, save_path):
     if not layer_stats_steps:
         return
 
-    img_tokens = max_side * max_side
-    indices = (
-        torch.arange(h)[:, None] * max_side
-        + torch.arange(w)[None, :]
-    ).flatten()
+    names = {
+        "txt_img": "Text → Image",
+        "img_txt": "Image → Text",
+        "img_img": "Image → Image",
+    }
 
-    values = {"Text → Image": [], "Image → Text": [], "Image → Image": []}
+    layers = sorted(layer_stats_steps[0].keys())
+    values = {key: [] for key in names}
 
     for step_stats in layer_stats_steps:
-        step_values = {key: [] for key in values}
+        for key in names:
+            step_values = []
 
-        for stats in step_stats:
-            attn = stats.get("attn_weights")
+            for layer in layers:
+                stats = step_stats.get(layer)
+                attn = stats.get("attn") if stats else None
 
-            if attn is None:
-                continue
+                if attn is None:
+                    step_values.append(float("nan"))
+                    continue
 
-            attn = attn.float()
-            idx = indices.to(attn.device)
+                value = attn[key].float().mean().item()
+                step_values.append(value)
 
-            # Image Query → Image Key
-            img_query = attn.index_select(-2, idx)
-            img_img = img_query.index_select(-1, idx)
-            img_to_img = img_img.sum(dim=-1).mean().item()
-
-            # Image Query → Text Key
-            img_to_text = img_query[..., img_tokens:].sum(dim=-1).mean().item()
-
-            # Text Query → Image Key
-            text_query = attn[..., img_tokens:, :]
-            text_to_img = text_query.index_select(-1, idx).sum(dim=-1).mean().item()
-
-            step_values["Text → Image"].append(text_to_img)
-            step_values["Image → Text"].append(img_to_text)
-            step_values["Image → Image"].append(img_to_img)
-
-        for key in values:
-            values[key].append(step_values[key])
+            values[key].append(step_values)
 
     fig, axes = plt.subplots(3, 1, figsize=(12, 12), sharex=True)
     steps = range(len(layer_stats_steps))
 
-    for ax, (name, data) in zip(axes, values.items()):
-        data = torch.tensor(data, dtype=torch.float32)
+    for ax, (key, name) in zip(axes, names.items()):
+        data = torch.tensor(values[key], dtype=torch.float32)
 
-        for layer in range(data.shape[1]):
-            ax.plot(steps, data[:, layer], label=f"Layer {layer}")
+        for i, layer in enumerate(layers):
+            ax.plot(
+                steps,
+                data[:, i],
+                label=f"Layer {layer}"
+            )
 
         ax.set_title(name)
         ax.set_ylabel("Attention")
@@ -197,6 +188,7 @@ def save_attention_plot(layer_stats_steps, save_path, h, w, max_side):
         ax.legend(ncol=4, fontsize=8)
 
     axes[-1].set_xlabel("Sampling Step")
+
     fig.tight_layout()
     fig.savefig(save_path, dpi=150)
     plt.close(fig)

@@ -54,7 +54,8 @@ class SamplingEngine:
     def preview_decode(self, z: torch.Tensor) -> Image.Image:
         return self.vae._tensor_to_pils(self.vae.decoder(z))[0]
 
-    def save(self, imgs, frames, txt2img_input, save_dir, layer_stats_steps=None, max_side=None):
+
+    def save(self, imgs, frames, txt2img_input, save_dir, layer_stats_steps=None):
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         out_dir = os.path.join(save_dir, ts)
         os.makedirs(out_dir, exist_ok=True)
@@ -64,16 +65,18 @@ class SamplingEngine:
 
         if txt2img_input.frame_save:
             for b, frames_b in enumerate(frames):
-                save_video(os.path.join(out_dir, f"frames_{b}.mp4"), frames_b, fps=16)
+                save_video(
+                    os.path.join(out_dir, f"frames_{b}.mp4"),
+                    frames_b,
+                    fps=16
+                )
 
         if layer_stats_steps:
-            h = txt2img_input.H // state.config.compression_ratio // state.config.patch_size
-            w = txt2img_input.W // state.config.compression_ratio // state.config.patch_size
-
-            self.save(
-                imgs, frames, txt2img_input, save_dir,
-                layer_stats_steps, max_side
+            save_attention_plot(
+                layer_stats_steps,
+                os.path.join(out_dir, "attention_strength.png")
             )
+
 
     
     def txt2img(self, txt2img_input:Txt2ImgInput, start_t=1.0, inpaint_ctx: InpaintCtx | None = None, on_step=None, on_preview=None, save_dir=state.config.GENERATION_DIR) -> tuple[list[Image.Image], list[Image.Image], list[float]]:
@@ -119,8 +122,13 @@ class SamplingEngine:
 
             imgs, frames = self.vae_decode(x, latents, txt2img_input.frame_save)
 
-            self.save(imgs=imgs, frames=frames, txt2img_input=txt2img_input, save_dir=save_dir, layer_stats_steps=layer_stats_steps, max_side=init_out.max_side)
-
+            self.save(
+                imgs=imgs,
+                frames=frames,
+                txt2img_input=txt2img_input,
+                save_dir=save_dir,
+                layer_stats_steps=layer_stats_steps
+            )
             return imgs, frames, sigmas_steps
         
         except Exception as e:

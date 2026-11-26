@@ -19,6 +19,8 @@
 
 ![Inpainting UI](imgs/new_ui_2.png)
 
+- Compare
+
 ![Compare](imgs/new_ui_3.png)
 
 ---

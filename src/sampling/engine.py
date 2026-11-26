@@ -48,9 +48,9 @@ class SamplingEngine:
 
         return imgs, frames
 
-    def save(self, imgs, frames, txt2img_input):
+    def save(self, imgs, frames, txt2img_input, save_dir):
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-        out_dir = os.path.join(state.config.GENERATION_DIR, ts)
+        out_dir = os.path.join(save_dir, ts)
         os.makedirs(out_dir, exist_ok=True)
 
         for i, img in enumerate(imgs):
@@ -61,7 +61,7 @@ class SamplingEngine:
                 save_video(os.path.join(out_dir, f"frames_{b}.mp4"), frames_b, fps=16)
 
 
-    def txt2img(self, txt2img_input:Txt2ImgInput, start_t=1.0, inpaint_ctx: InpaintCtx | None = None, on_step=None) -> tuple[list[Image.Image], list[Image.Image], list[float]]:
+    def txt2img(self, txt2img_input:Txt2ImgInput, start_t=1.0, inpaint_ctx: InpaintCtx | None = None, on_step=None, save_dir=state.config.GENERATION_DIR) -> tuple[list[Image.Image], list[Image.Image], list[float]]:
         try:
             txt2img_input.prompts = self.llm.generation(
                 tags=txt2img_input.prompts, 
@@ -99,7 +99,7 @@ class SamplingEngine:
 
             imgs, frames = self.vae_decode(x, latents, txt2img_input.frame_save)
 
-            self.save(imgs=imgs, frames=frames, txt2img_input=txt2img_input)
+            self.save(imgs=imgs, frames=frames, txt2img_input=txt2img_input, save_dir=save_dir)
 
             return imgs, frames, sigmas_steps
         
@@ -118,6 +118,7 @@ class SamplingEngine:
 
         old_W, old_H = img.size
         img_side = max(old_W, old_H)
+        print(img_side)
 
         try:
             arr, H, W = arr_resize(
@@ -152,7 +153,7 @@ class SamplingEngine:
                 mask=mask_lat.expand(B, -1, -1, -1)
             )
 
-            return self.txt2img(txt2img_input, start_t=inpaint_input.start_t, inpaint_ctx=ctx, on_step=on_step)
+            return self.txt2img(txt2img_input, start_t=inpaint_input.start_t, inpaint_ctx=ctx, on_step=on_step, save_dir=state.config.INPAINTING_DIR)
         
         except Exception as e:
             error_report(e, "inpaint")

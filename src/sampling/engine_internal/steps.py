@@ -27,7 +27,6 @@ def one_steps(model: MMDIT, x, init_out: InitOutput, sigma, cfg) -> torch.Tensor
     v = u + cfg * (c - u)
     return v
 
-
 def sampling(model, txt2img_input: Txt2ImgInput, init_out: InitOutput, inpaint_ctx: InpaintCtx = None, on_step=None, on_preview=None, preview_every=4):
     model.eval()
     sigmas = init_out.sigmas

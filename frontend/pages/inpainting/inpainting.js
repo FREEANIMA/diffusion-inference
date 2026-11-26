@@ -35,6 +35,7 @@ const S = (window.__inpaintState ??= {
     cur: 0,                     // 선택된 번호 (0부터)
     showRes: false,             // true: 수정된 결과를 보여줌 / false: 원본 + 마스크 편집
     compare: false,             // true: 원본 | 결과 분할 비교
+    preview: null,              // 생성 중 미리보기 { img, rect } (x0_hat 디코드)
     cmpX: 0.5,                  // 분할선 위치 (결과 영역 폭 기준 0~1)
     cleanup: null,
 });
@@ -47,12 +48,13 @@ export async function init() {
     // 크기는 crop이 정하므로 Width/Height 칸은 뺌
     await initCommon({ size: false, inpaint: true, onGenerate });
     bind();
+    if (running) setGenButton('running');         // 생성 중에 돌아온 경우
 }
 
 // ===================== 화면 / 좌표 =====================
 const fullRect = () => ({ x: 0, y: 0, w: S.img.naturalWidth, h: S.img.naturalHeight });
 const curResult = () => S.results[S.cur] || null;
-const shownResult = () => (S.showRes ? curResult() : null);
+const shownResult = () => S.preview || (S.showRes ? curResult() : null);
 
 function resize() {
     const r = stage.getBoundingClientRect();
@@ -572,16 +574,60 @@ function showProgress(visible) {
     document.querySelector('.t2i-progress-wrap')?.classList.toggle('active', visible);
 }
 
-// job이 끝날 때까지 진행률을 갱신하며 기다림. 끝나면 job({ images, ... })을 돌려줌
-async function pollJob(jobId) {
+// ===================== 정지 =====================
+// Generate 버튼이 생성 중에는 Stop 버튼이 됨 (클릭 핸들러는 onGenerate 하나)
+let running = false;            // 생성 중인지
+let activeJob = null;           // 실행 중인 job_id (요청 응답 전에는 null)
+let cancelRequested = false;    // job_id를 받기 전에 Stop을 눌렀는지
+
+function setGenButton(state) {  // 'idle' | 'running' | 'stopping'
+    const btn = $('t2i-generate');
+    if (!btn) return;
+    btn.disabled = state === 'stopping';
+    btn.textContent = state === 'running' ? 'Stop' : state === 'stopping' ? 'Stopping...' : 'Generate';
+}
+
+async function sendCancel() {
+    if (!activeJob) return;     // 아직 job_id가 없음 → 받는 즉시 보냄
+    try {
+        await fetch(`${API_URL}/${activeJob}/cancel`, { method: 'POST' });
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+function requestCancel() {
+    cancelRequested = true;
+    setGenButton('stopping');
+    setStatus('Stopping...');
+    return sendCancel();
+}
+
+// 생성 중 미리보기(x0_hat)를 결과 영역에 덧그림. 처음 한 번만 그 영역에 맞춰 확대
+async function showPreview(b64str, r) {
+    const img = await loadImage(`data:image/png;base64,${b64str}`);
+    if (!cv || !cv.isConnected) return;        // 다른 탭으로 간 경우
+    const first = !S.preview;
+    S.preview = { img, rect: { ...r } };
+    S.compare = false;
+    if (first) fit(); else draw();
+}
+
+// job이 끝날 때까지 진행률/미리보기를 갱신하며 기다림. 끝나면 job({ images, ... })을 돌려줌
+async function pollJob(jobId, rect) {
+    let seen = 0;                               // 이미 받은 preview_seq (같은 프리뷰 재전송 방지)
     while (true) {
-        const res = await fetch(`${API_URL}/${jobId}`);
+        const res = await fetch(`${API_URL}/${jobId}?seen=${seen}`);
         if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
         const job = await res.json();
 
         setProgress(job.step, job.total);
+        if (job.preview) {
+            seen = job.preview_seq;
+            await showPreview(job.preview, rect);
+        }
 
-        if (job.status === 'done') return job;
+        if (job.status === 'done' || job.status === 'cancelled') return job;
         if (job.status === 'error') throw new Error(job.error);
         await new Promise(r => setTimeout(r, POLL_INTERVAL_MS));
     }
@@ -653,13 +699,16 @@ async function showResults(urls, r) {
 }
 
 async function onGenerate() {
+    if (running) return requestCancel();          // 생성 중에 누르면 Stop
     if (!S.img) return setStatus('먼저 이미지를 여세요', true);
     const r = currentRect();
     const sizeWarn = validSize(r.w, r.h) ? '' : ` — ${r.w}×${r.h}는 32의 배수가 아님 (서버에서 처리 필요)`;
 
     const params = collectCommon();     // prompts, steps, cfg, seed, sigmas, cfgs, etas, styles
-    const btn = $('t2i-generate');
-    btn.disabled = true;                // 생성하는 동안 중복 클릭 방지
+    running = true;
+    activeJob = null;
+    cancelRequested = false;
+    setGenButton('running');
     setProgress(0, 0);
     showProgress(true);
     setStatus('Sending...');
@@ -671,8 +720,15 @@ async function onGenerate() {
             urls = await mockInpaint({ prompts: params.prompts, crop: r });
         } else {
             const { job_id } = await sendInpaint(params, r, inpainting);
-            setStatus('Generating...');
-            const data = await pollJob(job_id);
+            activeJob = job_id;
+            if (cancelRequested) sendCancel();      // 응답 전에 Stop을 눌렀다면 지금 보냄
+            else setStatus('Generating...');
+            const data = await pollJob(job_id, r);
+            if (data.status === 'cancelled') {      // 편집 화면으로 복귀는 finally에서
+                setStatus('중지됨');
+                return;
+            }
+            S.preview = null;                       // showResults 전에 비워야 최종 결과가 보임
             urls = data.images.map(img => `data:image/png;base64,${img}`);
         }
 
@@ -683,8 +739,15 @@ async function onGenerate() {
     } catch (err) {
         setStatus(err.message, true);
     } finally {
-        btn.disabled = false;
+        running = false;
+        activeJob = null;
+        cancelRequested = false;
+        setGenButton('idle');
         showProgress(false);
+        if (S.preview) {                            // 에러 등으로 프리뷰가 남았으면 편집 화면으로 복귀
+            S.preview = null;
+            if (cv?.isConnected) fit();
+        }
     }
 }
 

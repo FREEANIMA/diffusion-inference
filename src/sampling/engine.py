@@ -7,6 +7,7 @@ from src.network import MMDIT
 from src.tag import TagGenration
 from src.storage import download_model, load_ema_only
 import os
+import gc
 from datetime import datetime
 
 import numpy as np
@@ -116,6 +117,10 @@ class SamplingEngine:
         except Exception as e:
             error_report(e, "txt2img")
             log(self.console, e)
+            gc.collect()
+            if torch.cuda.is_available():
+                torch.cuda.synchronize()
+                torch.cuda.empty_cache()
             raise
 
     def inpaint(self, txt2img_input:Txt2ImgInput, inpaint_input:InpaintInput, on_step=None, on_preview=None) -> tuple[list[Image.Image], list[Image.Image], list[float]]:

@@ -56,42 +56,43 @@ class SamplingEngine:
         return self.vae._tensor_to_pils(self.vae.decoder(z))[0]
 
 
-    def save(self, imgs, frames, txt2img_input, save_dir, full_list:list, layer_stats_steps=None):
+    def save(self, imgs, save_dir, txt2img_input=None, frames=None, full_list:list=None, layer_stats_steps=None, only_img=False):
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         out_dir = os.path.join(save_dir, ts)
         os.makedirs(out_dir, exist_ok=True)
 
-        params = {**to_jsonable(txt2img_input), "tags": full_list}
-        with open(os.path.join(out_dir, "txt2img_input.json"), "w", encoding="utf-8") as f:
-            json.dump(params, f, ensure_ascii=False, indent=2, default=str)
-
         for i, img in enumerate(imgs):
             save_img(os.path.join(out_dir, f"img_{i}.png"), img)
 
-        if txt2img_input.frame_save:
-            for b, frames_b in enumerate(frames):
-                save_video(
-                    os.path.join(out_dir, f"frames_{b}.mp4"),
-                    frames_b,
-                    fps=16
+        if not only_img:
+            params = {**to_jsonable(txt2img_input), "tags": full_list}
+            with open(os.path.join(out_dir, "txt2img_input.json"), "w", encoding="utf-8") as f:
+                json.dump(params, f, ensure_ascii=False, indent=2, default=str)
+
+            if txt2img_input.frame_save:
+                for b, frames_b in enumerate(frames):
+                    save_video(
+                        os.path.join(out_dir, f"frames_{b}.mp4"),
+                        frames_b,
+                        fps=16
+                    )
+
+            has_attn = bool(layer_stats_steps) and any(
+                stats.get("attn")
+                for step in layer_stats_steps
+                for stats in step.values()
+            )
+
+            if has_attn:
+                save_attention_plot(
+                    layer_stats_steps,
+                    os.path.join(out_dir, "attention_strength.png")
                 )
 
-        has_attn = bool(layer_stats_steps) and any(
-            stats.get("attn")
-            for step in layer_stats_steps
-            for stats in step.values()
-        )
-
-        if has_attn:
-            save_attention_plot(
-                layer_stats_steps,
-                os.path.join(out_dir, "attention_strength.png")
-            )
-
-            save_attention_json(
-                layer_stats_steps,
-                os.path.join(out_dir, "attention_strength.json")
-            )
+                save_attention_json(
+                    layer_stats_steps,
+                    os.path.join(out_dir, "attention_strength.json")
+                )
 
     def txt2img(self, txt2img_input:Txt2ImgInput, start_t=1.0, inpaint_ctx: InpaintCtx | None = None, on_step=None, on_preview=None, save_dir=state.config.GENERATION_DIR) -> tuple[list[Image.Image], list[Image.Image], list[float]]:
         init_out = imgs = frames = sigmas_steps = x = latents = layer_stats_steps = None
@@ -145,9 +146,11 @@ class SamplingEngine:
                 txt2img_input=txt2img_input,
                 save_dir=save_dir,
                 layer_stats_steps=layer_stats_steps,
-                full_list=full_list
+                full_list=full_list,
+                only_img=False
             )
-            return imgs, frames, sigmas_steps
+
+            return imgs, frames, sigmas_steps, save_dir
         
         except Exception as e:
             error_report(e, "txt2img")
@@ -203,12 +206,22 @@ class SamplingEngine:
                 mask=mask_lat.expand(B, -1, -1, -1)
             )
 
-            latents = self.txt2img(txt2img_input, start_t=inpaint_input.start_t, inpaint_ctx=ctx, on_step=on_step, on_preview=on_preview, save_dir=state.config.INPAINTING_DIR)
-
+            imgs, frames, sigmas, save_dir = self.txt2img(
+                txt2img_input,
+                start_t=inpaint_input.start_t,
+                inpaint_ctx=ctx,
+                on_step=on_step,
+                on_preview=on_preview,
+                save_dir=state.config.INPAINTING_DIR,
+            )
+            
             if inpaint_input.crop_img is not None:
-                crop_img = self.preview_decode(latents)
-                img = merge_img(origin_img=origin_img, crop_img=crop_img, box=inpaint_input.crop_box)
-                
+                imgs = [
+                    merge_img(origin_img, im, inpaint_input.crop_box, inpaint_input.mask)
+                    for im in imgs
+                ]
+                self.save(imgs=imgs, save_dir=save_dir, only_img=True)
+
             return img
         
         except Exception as e:

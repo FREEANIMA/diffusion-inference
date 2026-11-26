@@ -13,7 +13,7 @@ from datetime import datetime
 import numpy as np
 from src.sampling.engine_internal import (
     Txt2ImgInput, InitOutput, InpaintInput, InpaintCtx,
-    setup_init, sampling, arr_resize, mask_generation, save_img, save_video
+    setup_init, sampling, arr_resize, mask_generation, save_img, save_video, save_attention_plot
 )
 
 class SamplingEngine:
@@ -54,7 +54,7 @@ class SamplingEngine:
     def preview_decode(self, z: torch.Tensor) -> Image.Image:
         return self.vae._tensor_to_pils(self.vae.decoder(z))[0]
 
-    def save(self, imgs, frames, txt2img_input, save_dir):
+    def save(self, imgs, frames, txt2img_input, save_dir, layer_stats_steps=None, max_side=None):
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         out_dir = os.path.join(save_dir, ts)
         os.makedirs(out_dir, exist_ok=True)
@@ -65,6 +65,15 @@ class SamplingEngine:
         if txt2img_input.frame_save:
             for b, frames_b in enumerate(frames):
                 save_video(os.path.join(out_dir, f"frames_{b}.mp4"), frames_b, fps=16)
+
+        if layer_stats_steps:
+            h = txt2img_input.H // state.config.compression_ratio // state.config.patch_size
+            w = txt2img_input.W // state.config.compression_ratio // state.config.patch_size
+
+            self.save(
+                imgs, frames, txt2img_input, save_dir,
+                layer_stats_steps, max_side
+            )
 
     
     def txt2img(self, txt2img_input:Txt2ImgInput, start_t=1.0, inpaint_ctx: InpaintCtx | None = None, on_step=None, on_preview=None, save_dir=state.config.GENERATION_DIR) -> tuple[list[Image.Image], list[Image.Image], list[float]]:
@@ -98,7 +107,7 @@ class SamplingEngine:
             def _on_preview(i, n, z):
                 on_preview(i, n, self.preview_decode(z))
 
-            x, latents, sigmas_steps = sampling(
+            x, latents, sigmas_steps, layer_stats_steps = sampling(
                 model=self.model,
                 txt2img_input=txt2img_input,
                 init_out=init_out,
@@ -110,7 +119,7 @@ class SamplingEngine:
 
             imgs, frames = self.vae_decode(x, latents, txt2img_input.frame_save)
 
-            self.save(imgs=imgs, frames=frames, txt2img_input=txt2img_input, save_dir=save_dir)
+            self.save(imgs=imgs, frames=frames, txt2img_input=txt2img_input, save_dir=save_dir, layer_stats_steps=layer_stats_steps, max_side=init_out.max_side)
 
             return imgs, frames, sigmas_steps
         

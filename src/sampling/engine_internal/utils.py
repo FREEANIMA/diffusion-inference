@@ -5,6 +5,7 @@ from src.core import error_report
 
 import torch
 import torch.nn.functional as F
+import matplotlib.pyplot as plt
 
 def mask_generation(mask_arr, latent, thr=0.5):
     if isinstance(mask_arr, np.ndarray):
@@ -136,3 +137,66 @@ def save_json(path, data):
         if os.path.exists(tmp):
             os.remove(tmp)
         raise
+
+
+def save_attention_plot(layer_stats_steps, save_path, h, w, max_side):
+    if not layer_stats_steps:
+        return
+
+    img_tokens = max_side * max_side
+    indices = (
+        torch.arange(h)[:, None] * max_side
+        + torch.arange(w)[None, :]
+    ).flatten()
+
+    values = {"Text → Image": [], "Image → Text": [], "Image → Image": []}
+
+    for step_stats in layer_stats_steps:
+        step_values = {key: [] for key in values}
+
+        for stats in step_stats:
+            attn = stats.get("attn_weights")
+
+            if attn is None:
+                continue
+
+            attn = attn.float()
+            idx = indices.to(attn.device)
+
+            # Image Query → Image Key
+            img_query = attn.index_select(-2, idx)
+            img_img = img_query.index_select(-1, idx)
+            img_to_img = img_img.sum(dim=-1).mean().item()
+
+            # Image Query → Text Key
+            img_to_text = img_query[..., img_tokens:].sum(dim=-1).mean().item()
+
+            # Text Query → Image Key
+            text_query = attn[..., img_tokens:, :]
+            text_to_img = text_query.index_select(-1, idx).sum(dim=-1).mean().item()
+
+            step_values["Text → Image"].append(text_to_img)
+            step_values["Image → Text"].append(img_to_text)
+            step_values["Image → Image"].append(img_to_img)
+
+        for key in values:
+            values[key].append(step_values[key])
+
+    fig, axes = plt.subplots(3, 1, figsize=(12, 12), sharex=True)
+    steps = range(len(layer_stats_steps))
+
+    for ax, (name, data) in zip(axes, values.items()):
+        data = torch.tensor(data, dtype=torch.float32)
+
+        for layer in range(data.shape[1]):
+            ax.plot(steps, data[:, layer], label=f"Layer {layer}")
+
+        ax.set_title(name)
+        ax.set_ylabel("Attention")
+        ax.grid(True, alpha=0.3)
+        ax.legend(ncol=4, fontsize=8)
+
+    axes[-1].set_xlabel("Sampling Step")
+    fig.tight_layout()
+    fig.savefig(save_path, dpi=150)
+    plt.close(fig)

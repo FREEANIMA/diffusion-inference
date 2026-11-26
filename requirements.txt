@@ -41,3 +41,5 @@ pyarrow
 tiktoken
 protobuf
 python-multipart
+
+matplotlib

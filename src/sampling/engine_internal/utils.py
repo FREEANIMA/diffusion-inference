@@ -147,6 +147,8 @@ def save_json(path, data):
             os.remove(tmp)
         raise
 
+# ============================================================================= #
+# attn 확인용
 
 def save_attention_plot(layer_stats_steps, save_path):
     if not layer_stats_steps:
@@ -231,3 +233,16 @@ def save_attention_json(layer_stats_steps, save_path):
 
     with open(save_path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+
+# ============================================================================= #
+# txt2img_inpput 저장
+
+import json
+import dataclasses
+
+def to_jsonable(obj):
+    if dataclasses.is_dataclass(obj) and not isinstance(obj, type):
+        obj = dataclasses.asdict(obj)
+    elif hasattr(obj, "__dict__"):
+        obj = vars(obj)
+    return obj

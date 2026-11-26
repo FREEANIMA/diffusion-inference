@@ -9,11 +9,12 @@ from src.storage import download_model, load_ema_only
 import os
 import gc
 from datetime import datetime
+import json
 
 import numpy as np
 from src.sampling.engine_internal import (
     Txt2ImgInput, InitOutput, InpaintInput, InpaintCtx,
-    setup_init, sampling, arr_resize, mask_generation, save_img, save_video, save_attention_plot, save_attention_json
+    setup_init, sampling, arr_resize, mask_generation, save_img, save_video, save_attention_plot, save_attention_json, to_jsonable
 )
 
 class SamplingEngine:
@@ -55,10 +56,14 @@ class SamplingEngine:
         return self.vae._tensor_to_pils(self.vae.decoder(z))[0]
 
 
-    def save(self, imgs, frames, txt2img_input, save_dir, layer_stats_steps=None):
+    def save(self, imgs, frames, txt2img_input, save_dir, full_list:list, layer_stats_steps=None):
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         out_dir = os.path.join(save_dir, ts)
         os.makedirs(out_dir, exist_ok=True)
+
+        params = {**to_jsonable(txt2img_input), "tags": full_list}
+        with open(os.path.join(out_dir, "txt2img_input.json"), "w", encoding="utf-8") as f:
+            json.dump(params, f, ensure_ascii=False, indent=2, default=str)
 
         for i, img in enumerate(imgs):
             save_img(os.path.join(out_dir, f"img_{i}.png"), img)
@@ -82,18 +87,18 @@ class SamplingEngine:
                 os.path.join(out_dir, "attention_strength.json")
             )
 
-
-    
     def txt2img(self, txt2img_input:Txt2ImgInput, start_t=1.0, inpaint_ctx: InpaintCtx | None = None, on_step=None, on_preview=None, save_dir=state.config.GENERATION_DIR) -> tuple[list[Image.Image], list[Image.Image], list[float]]:
         init_out = imgs = frames = sigmas_steps = x = latents = layer_stats_steps = None
         try:
-            txt2img_input.prompts = self.llm.generation(
+            prompts, full_list = self.llm.generation(
                 tags=txt2img_input.prompts, 
                 nsfw=txt2img_input.nsfw,
                 H=txt2img_input.H,
                 W=txt2img_input.W,
                 inferenc_mode=txt2img_input.prompt_static
             )
+
+            txt2img_input.prompts = prompts
         
             init_out:InitOutput = setup_init(model=self.te, config=state.config, txt2img_input=txt2img_input)
 
@@ -133,7 +138,8 @@ class SamplingEngine:
                 frames=frames,
                 txt2img_input=txt2img_input,
                 save_dir=save_dir,
-                layer_stats_steps=layer_stats_steps
+                layer_stats_steps=layer_stats_steps,
+                full_list=full_list
             )
             return imgs, frames, sigmas_steps
         
@@ -153,8 +159,6 @@ class SamplingEngine:
             img = inpaint_input.crop_img
         else:
             img = inpaint_input.img
-
-        origin_img = inpaint_input.img
 
         old_W, old_H = img.size
         img_side = max(old_W, old_H)

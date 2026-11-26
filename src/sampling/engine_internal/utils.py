@@ -7,7 +7,7 @@ import torch
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
 
-def mask_generation(mask_arr, latent, thr=0.5):
+def mask_generation(mask_arr, latent, thr=0.1, dilate=1, soft=False):
     if isinstance(mask_arr, np.ndarray):
         m = torch.from_numpy(mask_arr).float()
     else:
@@ -24,7 +24,16 @@ def mask_generation(mask_arr, latent, thr=0.5):
     m = m.to(latent.device, latent.dtype)
 
     m_lat = F.adaptive_avg_pool2d(m, output_size=latent.shape[-2:])
-    return (m_lat > thr).float()
+
+    if soft:
+        # 부드러운 마스크: 경계가 자연스럽게 섞임
+        return m_lat.clamp(0.0, 1.0)
+
+    m_bin = (m_lat > thr).float()          # 조금만 걸쳐도 포함
+    if dilate > 0:
+        k = 2 * dilate + 1
+        m_bin = F.max_pool2d(m_bin, k, stride=1, padding=dilate)
+    return m_bin
 
 # ============================================================================= #
 # img resize

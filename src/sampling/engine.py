@@ -140,7 +140,7 @@ class SamplingEngine:
         except Exception as e:
             error_report(e, "txt2img")
             log(self.console, e)
-            raise  # except 안에서만 raise
+            raise
 
         finally:
             del init_out, imgs, frames, sigmas_steps, x, latents, layer_stats_steps

@@ -50,12 +50,17 @@ def sampling(model: MMDIT, txt2img_input: Txt2ImgInput, init_out: InitOutput, in
         z0 = inpaint_ctx.z0.to(device=noise.device, dtype=noise.dtype)
         mask = inpaint_ctx.mask.to(device=noise.device, dtype=noise.dtype)
 
-        def clamp_known(x, sigma):
-            return mask * x + (1.0 - mask) * ((1.0 - sigma) * z0 + sigma * noise)
+        def known_at(s):
+            return (1.0 - s) * z0 + s * noise
+
+        def clamp_known(x, s):
+            return mask * x + (1.0 - mask) * known_at(s)
+
+        # 마스크 영역도 start sigma 수준의 (z0 + noise)로 시작
+        x = known_at(float(sigmas[0]))
     else:
         clamp_known = None
-
-    x = noise if clamp_known is None else clamp_known(noise, float(sigmas[0]))
+        x = noise
 
     # Solver states
     x0_prev, dpmpp_h_prev = None, None

@@ -12,10 +12,14 @@
 ## Screenshots
 
 ### Sampling
+
 ![Sampling UI](docs/imgs/new_ui.png)
 
 ### Inpainting
+
 ![Inpainting UI](docs/imgs/new_ui_2.png)
+
+![Compare](docs/imgs/new_ui_3.png)
 
 ---
 

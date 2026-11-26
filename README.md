@@ -1,21 +1,20 @@
 # Diffusion Text-to-Image
 
+## UPDATE 2027-11-27
 ## UI Update
+UI -> CLICK
 
-- **Multi-prompt** support
-- **Custom schedulers**
-  - Sigma scheduler (CDF-based)
-  - CFG scheduler
-  - Eta scheduler
-- **Click-button revision**
+## Backend
 
-## Screenshots
+- Migrated the backend to **FastAPI**
+- Sampling / inpainting run as background jobs (progress polling, live preview, cancel)
+- Run: `uvicorn main:app --reload`
 
-### Sampling
-![Sampling UI](docs/imgs/new_ui.png)
+## Checkpoint
 
-### Inpainting
-![Inpainting UI](docs/imgs/new_ui_2.png)
+- Switched checkpoint format to **safetensors** (previously `.pt`)
+
+---
 
 [Update](CHANGELOG.md) · [Train State](docs/training.md) · [Architecture](docs/architecture.md) · [UI](docs/ui.md)
 
@@ -25,8 +24,8 @@
 
 ## Installation
 ```bash
-git clone https://github.com/FREEANIMA/DiffusionSampling.git
-cd DiffusionSampling
+git clone https://github.com/FREEANIMA/diffusion-inference.git
+cd diffusion-inference
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt

@@ -44,7 +44,7 @@ def start_sampling(sampling: SamplingRequest, inpainting: InPaintingRequest,
     img = b64_to_image(inpainting.image_b64, "RGB")
 
     inpaint_input = InpaintInput(
-        img=b64_to_image(inpainting.image_b64, "RGB"),
+        img=img,
         start_t=inpainting.start_t,
         mask=b64_to_mask(inpainting.mask_b64, img.size),
         crop_img=b64_to_image(inpainting.crop_b64, "RGB") if use_crop else None,

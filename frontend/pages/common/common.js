@@ -7,8 +7,8 @@ export const API_BASE = '';
 // x = linspace(0, 1, steps + 1), 점 개수 = steps. 유저는 함수식으로만 입력 (점 직접 편집 없음)
 const MATH = {
     sin: Math.sin, cos: Math.cos, tan: Math.tan, acos: Math.acos, exp: Math.exp, log: Math.log,
-    sqrt: Math.sqrt, abs: Math.abs, pow: Math.pow, min: Math.min, max: Math.max,
-    floor: Math.floor, pi: Math.PI, e: Math.E,
+    sqrt: Math.sqrt, abs: Math.abs, pow: Math.pow, min: Math.min, max: Math.max, tanh:Math.tanh,
+    floor: Math.floor, pi: Math.PI, e: Math.E, atanh:Math.atanh,
 };
 const MATH_NAMES = Object.keys(MATH);
 const ALLOWED = new Set(['t', ...MATH_NAMES]);

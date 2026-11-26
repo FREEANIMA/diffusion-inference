@@ -17,7 +17,7 @@
 
 ### Inpainting
 
-![Inpainting UI](imgs/new_ui_2.png)
+![Inpainting UI](imgs/new_ui_4.png)
 
 - Compare
 
@@ -28,7 +28,7 @@
 - Three tabs: **Text2img**, **Inpainting**, **Detailer**. The last tab is remembered, and `#txt2img`, `#inpainting`, `#detailer` in the URL open that tab directly.
 - **Tag Browser**: browse and search tags by type, and click to add them to the prompt.
 - **Tags autocomplete** and **History**: click a history entry to restore the input plus the expanded tags.
-- **고정 (Fixed)** switch: when on, only the entered tags are used and no LLM tag expansion happens.
+- **Fixed** switch: when on, only the entered tags are used and no LLM tag expansion happens.
 - Only one job runs at a time. Generation runs in a background thread and the browser polls for the result, so long jobs do not hit proxy timeouts.
 
 ### UI

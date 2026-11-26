@@ -515,7 +515,7 @@ export function collectCommon() {
         ...getCurveParams(cfg),
         tags: [...checkedTags],
     };
-    if (document.getElementById('t2i-wiidth')) {
+    if (document.getElementById('t2i-width')) {
         params.width = Number(val('t2i-width'));
         params.height = Number(val('t2i-height'));
     }

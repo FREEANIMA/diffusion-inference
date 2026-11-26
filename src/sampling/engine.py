@@ -118,7 +118,6 @@ class SamplingEngine:
 
         old_W, old_H = img.size
         img_side = max(old_W, old_H)
-        print(img_side)
 
         try:
             arr, H, W = arr_resize(

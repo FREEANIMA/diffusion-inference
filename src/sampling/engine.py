@@ -13,7 +13,7 @@ from datetime import datetime
 import numpy as np
 from src.sampling.engine_internal import (
     Txt2ImgInput, InitOutput, InpaintInput, InpaintCtx,
-    setup_init, sampling, arr_resize, mask_generation, save_img, save_video, save_attention_plot
+    setup_init, sampling, arr_resize, mask_generation, save_img, save_video, save_attention_plot, save_attention_json
 )
 
 class SamplingEngine:
@@ -75,6 +75,11 @@ class SamplingEngine:
             save_attention_plot(
                 layer_stats_steps,
                 os.path.join(out_dir, "attention_strength.png")
+            )
+
+            save_attention_json(
+                layer_stats_steps,
+                os.path.join(out_dir, "attention_strength.json")
             )
 
 

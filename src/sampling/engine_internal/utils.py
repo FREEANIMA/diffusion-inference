@@ -192,3 +192,33 @@ def save_attention_plot(layer_stats_steps, save_path):
     fig.tight_layout()
     fig.savefig(save_path, dpi=150)
     plt.close(fig)
+
+def save_attention_json(layer_stats_steps, save_path):
+    if not layer_stats_steps:
+        return
+
+    data = {
+        "steps": []
+    }
+
+    for step, step_stats in enumerate(layer_stats_steps):
+        step_data = {
+            "step": step,
+            "layers": {}
+        }
+
+        for layer, stats in step_stats.items():
+            attn = stats.get("attn") if stats else None
+
+            if attn is None:
+                continue
+
+            step_data["layers"][str(layer)] = {
+                key: float(value.float().mean().item())
+                for key, value in attn.items()
+            }
+
+        data["steps"].append(step_data)
+
+    with open(save_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)

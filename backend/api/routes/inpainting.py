@@ -1,7 +1,7 @@
 import threading
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
 from api.schemas import InPaintingRequest, SamplingRequest
 from src.sampling import Engine, Txt2ImgInput, InpaintInput

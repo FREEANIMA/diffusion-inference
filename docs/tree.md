@@ -1,51 +1,51 @@
-## Tree 
+## Project Structure
 
 ```text
-[src]
-    [core]
-        __init__.py
-        config.py
-        runtime.py
-        shared.py
-        state.py
-        utils.py
-    [external]
-        __init__.py
-        load.py
-        te.py
-        vae.py
-    [network]
-        [mmdit_dcae] 
-            __init__.py
-            Block.py
-            Model.py
-            patch_embedding.py
-            Rope2D.py
-            sinusoidal_pos_emb.py
-        [tags_llm]
-            __init__.py
-            Block.py
-            Model.py
-            Rope1D.py
-        __init__.py
-    [sampling]
-        [engine_internal]
-            __init__.py
-            setup.py
-            solvers.py 
-            steps.py
-            trajectory.py
-            types.py
-            utils.py
-        __init__.py
-        engine.py
-    [storage]
-        __init__.py
-        hub.py
-        load_checkpoint.py
-    [tag]
-        __init__.py
-        tags.py
-        utils.py
-    __init__.py
+src/
+├── core/
+│   ├── __init__.py
+│   ├── config.py
+│   ├── runtime.py
+│   ├── shared.py
+│   ├── state.py
+│   └── utils.py
+├── external/
+│   ├── __init__.py
+│   ├── load.py
+│   ├── te.py
+│   └── vae.py
+├── network/
+│   ├── mmdit_dcae/
+│   │   ├── __init__.py
+│   │   ├── Block.py
+│   │   ├── Model.py
+│   │   ├── patch_embedding.py
+│   │   ├── Rope2D.py
+│   │   └── sinusoidal_pos_emb.py
+│   ├── tags_llm/
+│   │   ├── __init__.py
+│   │   ├── Block.py
+│   │   ├── Model.py
+│   │   └── Rope1D.py
+│   └── __init__.py
+├── sampling/
+│   ├── engine_internal/
+│   │   ├── __init__.py
+│   │   ├── setup.py
+│   │   ├── solvers.py
+│   │   ├── steps.py
+│   │   ├── trajectory.py
+│   │   ├── types.py
+│   │   └── utils.py
+│   ├── __init__.py
+│   └── engine.py
+├── storage/
+│   ├── __init__.py
+│   ├── hub.py
+│   └── load_checkpoint.py
+├── tag/
+│   ├── __init__.py
+│   ├── tags.py
+│   └── utils.py
+└── __init__.py
 ```

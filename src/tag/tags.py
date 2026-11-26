@@ -95,7 +95,10 @@ class TagGenration:
         if isinstance(nsfw, bool):
             nsfw = [nsfw] * len(tags)
 
-        tags_list = [tag.split(", ") for tag in tags]
+        tags_list = [
+            [x.strip() for x in tag.split(",") if x.strip()]
+            for tag in tags
+        ]
         unks_list, dups_list = unk_separation(self.dup_map, tags_list)
         
         short = set(state.config.NAS_SHORT)

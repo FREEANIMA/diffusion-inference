@@ -109,16 +109,15 @@ class SamplingEngine:
             raise
 
     def inpaint(self, txt2img_input:Txt2ImgInput, inpaint_input:InpaintInput, on_step=None) -> tuple[list[Image.Image], list[Image.Image], list[float]]:
-        crop_check = False
         if inpaint_input.crop_img is not None:
             img = inpaint_input.crop_img
         else:
             img = inpaint_input.img
-            crop_check=True
 
         origin_img = inpaint_input.img
 
-        img_side = max(H, W)
+        old_W, old_H = img.size
+        img_side = max(old_W, old_H)
 
         try:
             arr, H, W = arr_resize(

@@ -64,7 +64,7 @@ def start_sampling(sampling: SamplingRequest, engine: Engine = Depends(get_engin
         try:
             with gpu_lock:
                 check()                              # 대기열에서 기다리는 동안 정지했다면 바로 종료
-                imgs, _, _ = engine.txt2img(txt2img_input=txt2img_input, inpaint_ctx=None,
+                imgs, _, _, _ = engine.txt2img(txt2img_input=txt2img_input, inpaint_ctx=None,
                                             on_step=on_step, on_preview=on_preview)
             jobs[job_id].update(status="done", images=[pil_to_b64(im) for im in imgs])
         except Cancelled:

@@ -77,7 +77,7 @@ def start_sampling(sampling: SamplingRequest, inpainting: InPaintingRequest,
         try:
             with gpu_lock:
                 check()                              # 대기열에서 기다리는 동안 정지했다면 바로 종료
-                imgs, _, _ = engine.inpaint(
+                imgs, _, _, _ = engine.inpaint(
                     txt2img_input=txt2img_input,
                     inpaint_input=inpaint_input,
                     on_step=on_step,

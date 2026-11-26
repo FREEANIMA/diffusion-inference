@@ -1,0 +1,135 @@
+﻿[backend]
+    [api]
+        [routes]
+            __init__.py
+            inpainting.py
+            sampling.py
+            tag_browser.py
+        [schemas]
+            __init__.py
+            schema.py
+        __init__.py
+        app.py
+    [services]
+        __init__.py
+        debug.py
+        jobs.py
+        load_data.py
+        utils.py
+[configs]
+    [version_10]
+        cfg_settings.json
+        eta_settings copy.json
+        finetuning_setting.json
+        model_settings.json
+        path_settings.json
+        sampling_settings.json
+        sigma_settings.json
+        ver_number.json
+    [version_9]
+        cfg_settings.json
+        eta_settings copy.json
+        finetuning_setting.json
+        model_settings.json
+        path_settings.json
+        sampling_settings.json
+        sigma_settings.json
+        ver_number.json
+    __init__.py
+[docs]
+    [imgs]
+        detailer_process.gif
+        inference.png
+        inpaintbf.png
+        inpainting.png
+        new_ui.png
+        new_ui_2.png
+        new_ui_3.png
+        patch_size_1.png
+        patch_size_2.png
+        sample.png
+        sampling.png
+        train_img.png
+        train_loop.png
+    architecture.md
+    training.md
+    tree.md
+    ui.md
+[frontend]
+    [pages]
+        [common]
+            common.css
+            common.html
+            common.js
+        [home]
+            home.css
+            home.html
+            home.js
+        [inpainting]
+            inpainting.css
+            inpainting.html
+            inpainting.js
+        [sampling]
+            sampling.css
+            sampling.html
+            sampling.js
+    [shared]
+        base.css
+    dev_server.py
+    index.css
+    index.html
+    index.js
+[src]
+    [core]
+        __init__.py
+        config.py
+        runtime.py
+        shared.py
+        state.py
+        utils.py
+    [external]
+        __init__.py
+        load.py
+        te.py
+        vae.py
+    [network]
+        [mmdit_dcae]
+            __init__.py
+            Block.py
+            Model.py
+            patch_embedding.py
+            Rope2D.py
+            sinusoidal_pos_emb.py
+        [tags_llm]
+            __init__.py
+            Block.py
+            Model.py
+            Rope1D.py
+        __init__.py
+    [sampling]
+        [engine_internal]
+            __init__.py
+            setup.py
+            solvers.py
+            steps.py
+            trajectory.py
+            types.py
+            utils.py
+        __init__.py
+        engine.py
+    [storage]
+        __init__.py
+        hub.py
+        load_checkpoint.py
+    [tag]
+        __init__.py
+        tags.py
+        utils.py
+    __init__.py
+.env
+.gitignore
+CHANGELOG.md
+main.py
+README.md
+requirements.txt
+version.py

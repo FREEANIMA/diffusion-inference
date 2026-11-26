@@ -16,7 +16,7 @@ UI -> CLICK
 
 ---
 
-[Update](CHANGELOG.md) · [Train State](docs/training.md) · [Architecture](docs/architecture.md) · [UI](docs/ui.md)
+[Update](CHANGELOG.md) · [Train State](docs/training.md) · [Architecture](docs/architecture.md) · [UI](docs/ui.md) · [TREE](docs/tree.md) 
 
 ![sample_1](docs/imgs/sample.png)
 

@@ -174,15 +174,15 @@ def sampling(model: MMDIT, txt2img_input: Txt2ImgInput, init_out: InitOutput, in
         layer_stats_steps.append(step_stats)
 
         # Logging
-        tqdm.write(
-            f"[{i:02d}] s={sigma:.3f}->{sigma_next:.3f} cfg={cfg:.1f} eta={eta:.3f} "
-            f"noise={'Y' if use_noise else 'N'} | "
-            f"x_in.std={x_in0.std().item():.3f} x_in.max={x_in0.abs().max().item():.2f} | "
-            f"v.std={v0.std().item():.3f} v.max={v0.abs().max().item():.2f} | "
-            f"x0hat.std={x0_hat.std().item():.3f} | "
-            f"x_next.std={x.std().item():.3f} x_next.max={x.abs().max().item():.2f} | "
-            f"nan={bool(torch.isnan(x).any())}"
-        )
+        # tqdm.write(
+        #     f"[{i:02d}] s={sigma:.3f}->{sigma_next:.3f} cfg={cfg:.1f} eta={eta:.3f} "
+        #     f"noise={'Y' if use_noise else 'N'} | "
+        #     f"x_in.std={x_in0.std().item():.3f} x_in.max={x_in0.abs().max().item():.2f} | "
+        #     f"v.std={v0.std().item():.3f} v.max={v0.abs().max().item():.2f} | "
+        #     f"x0hat.std={x0_hat.std().item():.3f} | "
+        #     f"x_next.std={x.std().item():.3f} x_next.max={x.abs().max().item():.2f} | "
+        #     f"nan={bool(torch.isnan(x).any())}"
+        # )
 
         if on_step:
             on_step(i + 1, n)

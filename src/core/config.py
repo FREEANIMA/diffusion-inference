@@ -74,7 +74,8 @@ class FineTuningSettings:
 @dataclass(kw_only=True)
 class Config(ModelSettings, PathSettins, SigmaSettings, FineTuningSettings, SamplingSettings, CfgSettings):
     ver_number: int
-
+    attn_report: bool
+    
     def __post_init__(self):
         if self.dtype not in DTYPES:
             raise ValueError(f"unknown dtype: {self.dtype}")

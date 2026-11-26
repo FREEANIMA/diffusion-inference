@@ -22,8 +22,8 @@ def one_steps(model: MMDIT, x, init_out: InitOutput, sigma, cfg) -> tuple[torch.
         txt_emb=torch.cat([init_out.cond_emb, init_out.uncond_emb]),
         txt_mask=torch.cat([init_out.cond_mask, init_out.uncond_mask]),
         max_side=init_out.max_side,
-        collects_stats=True,
-        attn_collects_stats=True
+        collects_stats=state.config.attn_report,
+        attn_collects_stats=state.config.attn_report
     )
 
     c, u = out.float().chunk(2)

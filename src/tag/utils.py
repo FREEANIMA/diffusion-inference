@@ -32,8 +32,12 @@ def unk_separation(dup_map, tags_list) -> tuple[list[list], list[list]]:
     return unks_list, dups_list
 
 def mapping(generation_list, nsfw_text_list, size_text_list, init_text_list, unks_list, NAS: list, type_map: dict) -> list[str]:
+    def clean(tags):
+        return [t.strip() for t in tags if t and t.strip()]
+
     texts = []
     for g in generation_list:
+        g = clean(g)
         parts = []
         for _type in NAS:
             type_tag = [tag for tag in g if type_map.get(tag) == _type]
@@ -41,10 +45,10 @@ def mapping(generation_list, nsfw_text_list, size_text_list, init_text_list, unk
                 parts.append(f"{_type}: " + ", ".join(type_tag) + ";")
         texts.append(" ".join(parts))
 
-    others_texts = [
-        f"others: {', '.join(unks)};" if unks else ""
-        for unks in unks_list
-    ]
+    others_texts = []
+    for unks in unks_list:
+        unks = clean(unks)
+        others_texts.append(f"others: {', '.join(unks)};" if unks else "")
 
     results = []
     for init, nsfw, size, text, others in zip(

@@ -14,18 +14,18 @@ const MATH_NAMES = Object.keys(MATH);
 const ALLOWED = new Set(['t', ...MATH_NAMES]);
 
 // isPdf : 입력식을 밀도함수로 보고 출력은 CDF 기반 (sigma)
-// eta 기본값
+// plot 기본값
 const curves = {
     sigma: {
-        expr: 'sin(pi*(0.7 + t*3)/5)', isPdf: true, ymin: 0, ymax: 1, values: [], pdf: [],
+        expr: '(1-t)^2*t^2', isPdf: true, ymin: 0, ymax: 1, values: [], pdf: [],
         hint: 'Enter a density (pdf). Output is its CDF: σ = 1 − CDF. Var: t',
     },
     cfg: {
-        expr: 'max(0, sin(pi*(0.5 + 2*t)/3))', ymin: 0, ymax: 1, values: [],
+        expr: '(1-t)^2*t^2', ymin: 0, ymax: 1, values: [],
         hint: 'Plot range is 0–1. Final CFG = cfg × plot. Var: t',
     },
     eta: {
-        expr: 'max(0, sin(pi*(0.5 + 2*t)/3)) * 0.1', ymin: 0, ymax: 0.5, values: [],
+        expr: '(1-t)^2*t^2*0.1', ymin: 0, ymax: 0.5, values: [],
         hint: 'Used as-is per step (0–0.5). Var: t',
     },
 };

@@ -2,8 +2,8 @@
 - **Use Cache**
 - **Cpu Multi Threading**
  
-![inference](assets/train_loop.png)
+![inference](imgs/train_loop.png)
 
 ### Inference Architecture
 
-![inference](assets/inference.png)
+![inference](imgs/inference.png)

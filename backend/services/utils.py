@@ -17,3 +17,12 @@ def pil_to_b64(img, fmt="PNG", quality=95) -> str:
     else:
         img.save(buf, format=fmt)
     return base64.b64encode(buf.getvalue()).decode("utf-8")
+
+def b64_to_mask(b64: str, size: tuple[int, int]) -> Image.Image:
+    im = b64_to_image(b64, "RGBA")
+    alpha = im.getchannel("A")
+
+    mask = alpha if alpha.getextrema() != (255, 255) else im.convert("L")
+    if mask.size != size:                
+        mask = mask.resize(size, Image.Resampling.BILINEAR)
+    return mask

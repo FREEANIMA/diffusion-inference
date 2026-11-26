@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 from api.schemas import InPaintingRequest, SamplingRequest
 from src.sampling import Engine, Txt2ImgInput, InpaintInput
-from services import b64_to_image, pil_to_b64
+from services import b64_to_image, pil_to_b64, b64_to_mask
 
 router = APIRouter(prefix="/api", tags=["inpainting"])
 
@@ -41,11 +41,12 @@ def start_sampling(sampling: SamplingRequest, inpainting: InPaintingRequest,
     )
 
     use_crop = inpainting.crop_b64 is not None and inpainting.crop_box is not None
+    img = b64_to_image(inpainting.image_b64, "RGB")
 
     inpaint_input = InpaintInput(
         img=b64_to_image(inpainting.image_b64, "RGB"),
         start_t=inpainting.start_t,
-        mask=b64_to_image(inpainting.mask_b64, "L"),
+        mask=b64_to_mask(inpainting.mask_b64, img.size),
         crop_img=b64_to_image(inpainting.crop_b64, "RGB") if use_crop else None,
         crop_box=inpainting.crop_box if use_crop else None,
         upscale=use_crop,

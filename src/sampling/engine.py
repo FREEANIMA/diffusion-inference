@@ -176,7 +176,7 @@ class SamplingEngine:
                 x, y, w, h = inpaint_input.crop_box
                 mask = mask.crop((x, y, x + w, y + h))
                 
-            mask = mask.resize((W, H), Image.Resampling.NEAREST)
+            mask = mask.resize((W, H), Image.Resampling.BILINEAR)
             mask_arr = np.array(mask, dtype=np.uint8)
 
             np_tensor = torch.from_numpy(arr).permute(2, 0, 1).float().div_(255.0).unsqueeze(0)

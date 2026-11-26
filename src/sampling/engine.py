@@ -76,7 +76,13 @@ class SamplingEngine:
                     fps=16
                 )
 
-        if layer_stats_steps:
+        has_attn = bool(layer_stats_steps) and any(
+            stats.get("attn")
+            for step in layer_stats_steps
+            for stats in step.values()
+        )
+
+        if has_attn:
             save_attention_plot(
                 layer_stats_steps,
                 os.path.join(out_dir, "attention_strength.png")
@@ -86,7 +92,7 @@ class SamplingEngine:
                 layer_stats_steps,
                 os.path.join(out_dir, "attention_strength.json")
             )
-
+            
     def txt2img(self, txt2img_input:Txt2ImgInput, start_t=1.0, inpaint_ctx: InpaintCtx | None = None, on_step=None, on_preview=None, save_dir=state.config.GENERATION_DIR) -> tuple[list[Image.Image], list[Image.Image], list[float]]:
         init_out = imgs = frames = sigmas_steps = x = latents = layer_stats_steps = None
         try:

@@ -56,7 +56,7 @@ class SamplingEngine:
         return self.vae._tensor_to_pils(self.vae.decoder(z))[0]
 
 
-    def save(self, imgs, save_dir, txt2img_input=None, frames=None, full_list:list=None, layer_stats_steps=None, only_img=False):
+    def save(self, imgs, save_dir, txt2img_input=None, frames=None, full_list:list=None, layer_stats_steps=None, only_img=False, seeds=None):
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         out_dir = os.path.join(save_dir, ts)
         os.makedirs(out_dir, exist_ok=True)
@@ -66,6 +66,7 @@ class SamplingEngine:
 
         if not only_img:
             params = {**to_jsonable(txt2img_input), "tags": full_list}
+            params = {**params, "seeds" : seeds}
             with open(os.path.join(out_dir, "txt2img_input.json"), "w", encoding="utf-8") as f:
                 json.dump(params, f, ensure_ascii=False, indent=2, default=str)
 
@@ -147,7 +148,8 @@ class SamplingEngine:
                 save_dir=save_dir,
                 layer_stats_steps=layer_stats_steps,
                 full_list=full_list,
-                only_img=False
+                only_img=False,
+                seeds=init_out.seeds,
             )
 
             return imgs, frames, sigmas_steps, save_dir
@@ -214,7 +216,7 @@ class SamplingEngine:
                 on_preview=on_preview,
                 save_dir=state.config.INPAINTING_DIR,
             )
-            
+
             if inpaint_input.crop_img is not None:
                 imgs = [
                     merge_img(origin_img, im, inpaint_input.crop_box, inpaint_input.mask)

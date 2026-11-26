@@ -139,13 +139,13 @@ class SamplingEngine:
         except Exception as e:
             error_report(e, "txt2img")
             log(self.console, e)
+            raise  # except 안에서만 raise
+
         finally:
-            del txt2img_input, init_out, imgs, frames, sigmas_steps, x, latents, layer_stats_steps, inpaint_ctx
+            del init_out, imgs, frames, sigmas_steps, x, latents, layer_stats_steps
             gc.collect()
             if torch.cuda.is_available():
-                torch.cuda.synchronize()
                 torch.cuda.empty_cache()
-            raise
 
     def inpaint(self, txt2img_input:Txt2ImgInput, inpaint_input:InpaintInput, on_step=None, on_preview=None) -> tuple[list[Image.Image], list[Image.Image], list[float]]:
         if inpaint_input.crop_img is not None:

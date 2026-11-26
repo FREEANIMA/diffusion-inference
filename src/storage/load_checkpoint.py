@@ -36,15 +36,25 @@ def load_ema_only(config: Config, network: MMDIT, console=None) -> MMDIT:
     with safe_open(path, framework="pt") as f:
         model_cfg = json.loads(f.metadata()["config"])
 
-    with torch.device(config.device):
-        model: MMDIT = network(**model_cfg)
+    prev_dtype = torch.get_default_dtype()
+    torch.set_default_dtype(config.torch_dtype)
+    try:
+        with torch.device(config.device):
+            model: MMDIT = network(**model_cfg)
+    finally:
+        torch.set_default_dtype(prev_dtype)
 
-    sd = load_file(path, device="cpu")
-    sd = {k: v.to(device=config.device, dtype=config.torch_dtype) for k, v in sd.items()}
+    own = model.state_dict()
+    with safe_open(path, framework="pt", device="cpu") as f:
+        keys = set(f.keys())
+        missing = set(own.keys()) - keys
+        unexpected = keys - set(own.keys())
+        if missing or unexpected:
+            raise KeyError(f"state_dict mismatch. missing={list(missing)[:5]}, unexpected={list(unexpected)[:5]}")
+        with torch.no_grad():
+            for k in keys:
+                own[k].copy_(f.get_tensor(k))
 
-    model.to(dtype=config.torch_dtype)
-    model.load_state_dict(sd, strict=True)
-    del sd
     return model.eval()
 
 

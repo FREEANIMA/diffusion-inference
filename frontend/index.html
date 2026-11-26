@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sampling</title>
+
+    <script>
+        (function () {
+            var t = null;
+            try { t = localStorage.getItem('theme'); } catch (e) {}
+            if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            document.documentElement.dataset.theme = t;
+        })();
+    </script>
+
+    <link rel="stylesheet" href="/shared/base.css">
+    <link rel="stylesheet" href="/index.css">
+    <link rel="stylesheet" id="page-css">
+</head>
+<body>
+    <header>
+        <nav class="navi" aria-label="main-menu">
+            <a href="/sampling" data-link>Sampling</a>
+            <a href="/inpainting" data-link>InPaint</a>
+        </nav>
+        <button id="theme-toggle" type="button" class="theme-toggle" aria-label="테마 전환"></button>
+    </header>
+
+    <main>
+        <div class="main-frame" id="view"></div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="producer-inform">
+            <p>Administrator : SAVANA</p>
+            <address>
+                Email : <a href="mailto:icarose135@gmail.com">icarose135@gmail.com</a>
+            </address>
+        </div>
+        <nav class="footer-links" aria-label="외부 링크">
+            <a href="https://github.com/FREEANIMA/DiffusionSampling" target="_blank" rel="noopener">GitHub</a>
+            <a href="https://huggingface.co/honghong3/VER10" target="_blank" rel="noopener">Hugging Face</a>
+        </nav>
+    </footer>
+
+    <script type="module" src="/index.js"></script>
+</body>
+</html>

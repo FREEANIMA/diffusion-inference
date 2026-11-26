@@ -1,0 +1,704 @@
+/* common.css — txt2img / inpaint 공용 */
+
+/* ===== 전체 틀: 트리 / 입력 / 이미지판 ===== */
+/* 열: 트리 | 입력 | 세로 조절바 | 이미지판
+   --tree-col : 트리 열 폭 (접으면 아래 .tree-collapsed가 바꿈)
+   --ctrl-w   : 입력 열 폭 (드래그하면 JS가 px로 지정, 없으면 이미지판과 1:1) */
+.page-txt2img {
+    --tree-col: calc(240px + 1rem);
+    height: 100%;
+    display: grid;
+    grid-template-columns: var(--tree-col) minmax(0, var(--ctrl-w, 1fr)) 1rem minmax(0, 1fr);
+    gap: 0;                        /* 간격은 트리의 margin / 조절바 폭이 대신함 */
+}
+
+.page-txt2img.tree-collapsed {
+    --tree-col: calc(2.8rem + 1rem);
+}
+
+/* 각 열이 자기 안에서 스크롤되도록 */
+.page-txt2img > * {
+    min-height: 0;
+    overflow: auto;
+    padding: 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.page-txt2img .t2i-title {
+    margin: 0 0 0.6rem;
+}
+
+/* ===== Tag Browser 접기 / 펴기 ===== */
+.page-txt2img .t2i-tree {
+    margin-right: 1rem;
+}
+
+.page-txt2img .t2i-tree-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.6rem;
+}
+
+.page-txt2img .t2i-tree-head .t2i-title {
+    margin: 0;
+}
+
+.page-txt2img .t2i-tree-toggle {
+    flex: none;
+    width: 1.8rem;
+    height: 1.8rem;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    background: var(--bg);
+    color: inherit;
+    font: inherit;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.page-txt2img .t2i-tree-toggle:hover {
+    background: var(--hover-bg);
+    border-color: var(--accent);
+}
+
+/* 접힌 상태: 토글 버튼만 남김 */
+.page-txt2img.tree-collapsed .t2i-tree {
+    padding: 0.4rem;
+    overflow: hidden;
+}
+
+.page-txt2img.tree-collapsed .t2i-tree-head {
+    justify-content: center;
+    margin: 0;
+}
+
+.page-txt2img.tree-collapsed .t2i-title,
+.page-txt2img.tree-collapsed .t2i-tag-search,
+.page-txt2img.tree-collapsed .t2i-tag-tree {
+    display: none;
+}
+
+/* ===== 왼쪽: 트리 ===== */
+.page-txt2img .t2i-tree summary {
+    cursor: pointer;
+    font-weight: 600;
+    padding: 0.3rem 0;
+}
+
+.page-txt2img .t2i-tree ul {
+    margin: 0 0 0.5rem;
+    padding-left: 1.2rem;
+    list-style: none;
+}
+
+/* ===== 가운데: 입력 (위 프롬프트 / 아래 조건, 자동 분할) ===== */
+.page-txt2img .t2i-controls {
+    display: grid;
+    /* 프롬프트 | 가로 조절바 | 조건. 드래그하면 JS가 --rows를 px로 바꿈 */
+    grid-template-rows: var(--rows, minmax(0, 1fr) 1rem fit-content(60%));
+    gap: 0;
+    padding: 0;                    /* 바깥 박스 스타일은 각 pane이 대신 가짐 */
+    border: none;
+    overflow: hidden;
+}
+
+.page-txt2img .t2i-pane {
+    min-height: 0;
+    overflow: auto;                /* 각자 따로 스크롤 */
+    padding: 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+/* --- 위: 프롬프트 --- */
+.page-txt2img .t2i-prompts-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    position: sticky;              /* 프롬프트가 늘어나도 헤더(+)는 위에 고정 */
+    top: -0.8rem;                  /* pane padding만큼 보정 */
+    padding: 0.2rem 0;
+    background: var(--bg);
+    z-index: 1;
+}
+
+.page-txt2img .t2i-add,
+.page-txt2img .t2i-remove {
+    width: 1.8rem;
+    height: 1.8rem;
+    padding: 0;
+    line-height: 1;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--bg);
+}
+
+.page-txt2img .t2i-add:hover,
+.page-txt2img .t2i-remove:hover {
+    background: var(--hover-bg);
+    border-color: var(--accent);
+}
+
+.page-txt2img .t2i-prompts {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.page-txt2img .t2i-prompt-item {
+    position: relative;
+}
+
+.page-txt2img .t2i-prompt-item textarea {
+    width: 100%;
+}
+
+.page-txt2img .t2i-remove {
+    position: absolute;
+    top: 0.3rem;
+    right: 0.3rem;
+}
+
+/* --- 아래: 조건 --- */
+.page-txt2img textarea,
+.page-txt2img input[type="number"] {
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    resize: vertical;
+}
+
+/* 한 행 = .t2i-params */
+/* 칸 폭을 고정해 좌측 정렬. 행이 달라도 열이 맞고, 폭이 좁으면 다음 줄로 넘어감 */
+.page-txt2img .t2i-params {
+    /* 내용 폭만큼만 차지, 공간 부족하면 다음 줄로 */
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1.2rem;
+}
+
+.page-txt2img .t2i-params-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+/* 라벨 : 입력 (가로 배치) */
+.page-txt2img .t2i-field {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.4rem;
+    min-width: 0;
+    font-size: 0.8rem;
+}
+
+.page-txt2img .t2i-field > span {
+    flex: none;                       /* 라벨은 내용 폭, 줄어들지 않음 */
+    white-space: nowrap;
+}
+
+.page-txt2img .t2i-field > span::after {
+    content: " :";
+}
+
+.page-txt2img .t2i-field input:not([type="checkbox"]),
+.page-txt2img .t2i-field select {
+    flex: none;                       /* 남는 폭을 채우지 않고 고정 폭 */
+    width: 4.5rem;                    /* number / select 동일 폭 */
+    height: 1.8rem;                   /* number / select 동일 높이 */
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 0.3rem 0.4rem;
+    font: inherit;
+}
+
+.page-txt2img .t2i-field select {
+    padding-right: 1.8rem;            /* ▾ 화살표 자리 */
+}
+
+/* ===== 곡선: 차트 3열 + Revision 오버레이 ===== */
+/* pane이 세로 flex라 버튼이 가로로 꽉 차 가운데 정렬돼 보임 → 내용 폭 + 좌측 정렬 */
+.page-txt2img .t2i-pane > .t2i-revision {
+    align-self: flex-start;
+}
+
+.page-txt2img .t2i-charts {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.6rem;
+}
+
+.page-txt2img .t2i-chart {
+    margin: 0;
+    min-width: 0;
+}
+
+.page-txt2img .t2i-chart figcaption {
+    margin-bottom: 0.2rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.page-txt2img .t2i-chart canvas {
+    display: block;
+    width: 100%;
+    height: 150px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+}
+
+.page-txt2img .t2i-revision,
+.page-txt2img .t2i-curve-apply,
+.page-txt2img .t2i-rev-tab {
+    padding: 0.5rem 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg);
+}
+
+.page-txt2img .t2i-revision:hover,
+.page-txt2img .t2i-curve-apply:hover,
+.page-txt2img .t2i-rev-tab:hover {
+    background: var(--hover-bg);
+    border-color: var(--accent);
+}
+
+/* --- 오버레이 --- */
+.page-txt2img .t2i-rev {
+    width: min(760px, 92vw);
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--bg);
+    color: inherit;
+}
+
+.page-txt2img .t2i-rev::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.page-txt2img .t2i-rev-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    padding: 1rem;
+}
+
+.page-txt2img .t2i-rev-tabs {
+    display: flex;
+    gap: 0.4rem;
+}
+
+/* hover보다 아래에 둬야 active가 이김 */
+.page-txt2img .t2i-rev-tab.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-fg);
+}
+
+.page-txt2img .t2i-rev-hint {
+    padding: 0.5rem 0.7rem;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.page-txt2img .t2i-rev-head {
+    display: grid;
+    grid-template-columns: auto 1fr auto;   /* f(t) = / 입력칸 / Apply */
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.page-txt2img .t2i-rev-fx {
+    font-family: monospace;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.page-txt2img .t2i-curve-expr {
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    font-family: monospace;
+}
+
+.page-txt2img .t2i-rev-canvas {
+    display: block;
+    width: 100%;
+    height: min(55vh, 360px);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+}
+
+.page-txt2img .t2i-curve-msg {
+    min-height: 1.1em;
+    font-size: 0.8rem;
+    color: var(--muted);
+}
+
+.page-txt2img .t2i-curve-msg.error {
+    color: #d33;
+}
+
+.page-txt2img .t2i-rev-foot {
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* ===== 오른쪽 공용: 번호 / 결과 이미지 / Generate ===== */
+.page-txt2img .t2i-nums {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.page-txt2img .t2i-num {
+    min-width: 2rem;
+    padding: 0.3rem 0.7rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--bg);
+    font-weight: 600;
+}
+
+.page-txt2img .t2i-num:hover {
+    background: var(--hover-bg);
+    border-color: var(--accent);
+}
+
+/* hover보다 아래에 둬야 active가 이김 */
+.page-txt2img .t2i-num.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-fg);
+}
+
+.page-txt2img .t2i-image {
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+}
+
+.page-txt2img .t2i-image img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;            /* 비율 유지, 잘리지 않음 */
+}
+
+.page-txt2img .t2i-generate {
+    padding: 0.7rem;
+    border: none;
+    border-radius: 10px;
+    background: var(--accent);
+    color: var(--accent-fg);
+    font-weight: 600;
+}
+
+/* ===== Tag Browser ===== */
+.page-txt2img .t2i-tag-search {
+    width: 100%;
+    margin-bottom: 0.6rem;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    box-sizing: border-box;
+}
+
+.page-txt2img .t2i-tag-more {
+    padding: 0.2rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    font-size: 0.8rem;
+}
+
+/* ===== 자동완성 (body에 붙으므로 .page-txt2img 밖) ===== */
+.t2i-ac {
+    position: fixed;
+    z-index: 1000;
+    max-height: 260px;
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+
+.t2i-ac[hidden] { display: none; }
+
+.t2i-ac-item {
+    padding: 0.35rem 0.6rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.t2i-ac-item:hover { background: var(--hover-bg); }
+
+.t2i-ac-item.active {
+    background: var(--accent);
+    color: var(--accent-fg);
+}
+
+/* ===== 버튼 공통 ===== */
+.page-txt2img .t2i-add,
+.page-txt2img .t2i-remove,
+.page-txt2img .t2i-revision,
+.page-txt2img .t2i-curve-apply,
+.page-txt2img .t2i-rev-tab,
+.page-txt2img .t2i-num,
+.page-txt2img .t2i-tag-more,
+.page-txt2img .t2i-generate {
+    cursor: pointer;
+    font: inherit;
+    font-weight: 600;
+    color: inherit;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s,
+                transform 0.1s, filter 0.15s;
+}
+
+/* 보조 버튼 (Revision / Apply / Done / 탭 / more) */
+.page-txt2img .t2i-revision,
+.page-txt2img .t2i-curve-apply,
+.page-txt2img .t2i-rev-tab,
+.page-txt2img .t2i-tag-more {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+.page-txt2img .t2i-revision:hover,
+.page-txt2img .t2i-curve-apply:hover,
+.page-txt2img .t2i-rev-tab:hover,
+.page-txt2img .t2i-tag-more:hover {
+    background: var(--hover-bg);
+    border-color: var(--accent);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+/* 동그란 버튼 (+ / ×) */
+.page-txt2img .t2i-add,
+.page-txt2img .t2i-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    border-radius: 50%;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+.page-txt2img .t2i-add:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-fg);
+}
+
+.page-txt2img .t2i-remove:hover {
+    background: #d33;
+    border-color: #d33;
+    color: #fff;
+}
+
+/* 번호 버튼 */
+.page-txt2img .t2i-num {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+.page-txt2img .t2i-num.active {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+/* Generate: 메인 버튼 */
+.page-txt2img .t2i-generate {
+    letter-spacing: 0.02em;
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.page-txt2img .t2i-generate:hover:not(:disabled) {
+    filter: brightness(1.1);
+    box-shadow: 0 6px 16px color-mix(in srgb, var(--accent) 50%, transparent);
+}
+
+/* 눌림 / 비활성 / 키보드 포커스 */
+.page-txt2img button:active:not(:disabled) {
+    transform: translateY(1px) scale(0.97);
+}
+
+.page-txt2img button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.page-txt2img button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+/* ===== 콤보박스 (select) ===== */
+.page-txt2img select {
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    font: inherit;
+    padding: 0.35rem 1.8rem 0.35rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background-color: var(--bg);
+    color: inherit;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+    /* 오른쪽 ▾ 화살표 */
+    background-image:
+        linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+        linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+    background-position:
+        calc(100% - 15px) 55%,
+        calc(100% - 10px) 55%;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+}
+
+.page-txt2img select:hover {
+    background-color: var(--hover-bg);
+    border-color: var(--accent);
+}
+
+.page-txt2img select:focus-visible {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.page-txt2img select option {
+    background: var(--bg);
+    color: inherit;
+}
+
+/* ===== 토글 (checkbox) ===== */
+.page-txt2img .t2i-check input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    position: relative;
+    flex: none;
+    width: 2.4rem;
+    height: 1.4rem;
+    margin: 0;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--bg);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.page-txt2img .t2i-check input[type="checkbox"]::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 2px;
+    width: 0.95rem;
+    height: 0.95rem;
+    border-radius: 50%;
+    background: var(--muted);
+    transform: translateY(-50%);
+    transition: left 0.15s, background 0.15s;
+}
+
+.page-txt2img .t2i-check input[type="checkbox"]:checked {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.page-txt2img .t2i-check input[type="checkbox"]:checked::after {
+    left: calc(100% - 0.95rem - 2px);
+    background: var(--accent-fg);
+}
+
+.page-txt2img .t2i-check input[type="checkbox"]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+/* ===== 크기 조절바 (세로: 입력 | 이미지판, 가로: 프롬프트 / 조건) ===== */
+.page-txt2img .t2i-resizer {
+    position: relative;
+    z-index: 2;
+    touch-action: none;
+}
+
+/* .page-txt2img > * 의 박스 스타일을 덮어씀 */
+.page-txt2img > .t2i-resizer {
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    overflow: visible;
+}
+
+.page-txt2img .t2i-resizer::before {
+    content: "";
+    position: absolute;
+    border-radius: 999px;
+    background: var(--border);
+    transition: background 0.15s;
+}
+
+.page-txt2img .t2i-resizer:hover::before,
+.page-txt2img .t2i-resizer.dragging::before {
+    background: var(--accent);
+}
+
+.page-txt2img .t2i-resizer-v {
+    cursor: col-resize;
+}
+
+.page-txt2img .t2i-resizer-v::before {
+    top: 0.5rem;
+    bottom: 0.5rem;
+    left: 50%;
+    width: 4px;
+    margin-left: -2px;
+}
+
+.page-txt2img .t2i-resizer-h {
+    cursor: row-resize;
+}
+
+.page-txt2img .t2i-resizer-h::before {
+    left: 0.5rem;
+    right: 0.5rem;
+    top: 50%;
+    height: 4px;
+    margin-top: -2px;
+}
+
+/* 드래그 중에는 글자 선택 방지 */
+html.t2i-resizing,
+html.t2i-resizing * {
+    user-select: none !important;
+}

@@ -1,0 +1,44 @@
+<!-- inpainting: 오른쪽 이미지판만. 왼쪽/가운데는 common.js가 앞에 넣어 줌 -->
+<div class="page-txt2img">
+
+    <!-- 오른쪽: 번호 / 이미지판(편집 + 결과 겸용) / 도구 / Generate -->
+    <section class="t2i-viewer">
+        <div id="t2i-nums" class="t2i-nums"></div>
+
+        <!-- 이미지판: 마스크 / 크롭 / 확대 / 생성 결과 / 원본 비교 -->
+        <div id="inp-stage" class="inp-stage">
+            <canvas id="inp-canvas" class="inp-canvas"></canvas>
+            <button id="inp-drop" type="button" class="inp-drop">Click or drop an image</button>
+            <input id="inp-file" type="file" accept="image/*" hidden>
+        </div>
+
+        <!-- common.js가 요구하는 요소 (이 페이지에서는 안 씀, 항상 숨김) -->
+        <div id="t2i-image" class="t2i-image" hidden>
+            <span class="t2i-placeholder">No image</span>
+        </div>
+
+        <div class="inp-tools">
+            <div class="inp-row">
+                <button id="inp-open" type="button" class="inp-btn">Open</button>
+                <button id="inp-mask" type="button" class="inp-btn inp-toggle" aria-pressed="false" title="좌클릭 = 수정(빨강), 우클릭 = 보존(파랑). 빨강이 없으면 크롭 전체를 수정하고 파랑만 보존">
+                    <span class="inp-dot edit" aria-hidden="true"></span><span class="inp-dot keep" aria-hidden="true"></span>Mask
+                </button>
+                <button id="inp-eraser" type="button" class="inp-btn inp-toggle" aria-pressed="false" title="마스크 지우기 (좌/우클릭 드래그)">Eraser</button>
+                <button id="inp-crop" type="button" class="inp-btn inp-toggle" aria-pressed="false" title="드래그로 영역 지정 (W, H = 32 배수, 서로 나눠떨어짐)">Crop</button>
+                <button id="inp-upscale" type="button" class="inp-btn">Upscale</button>
+                <button id="inp-reset" type="button" class="inp-btn" title="크롭과 마스크를 모두 지우고 전체 보기로">Reset</button>
+                <button id="inp-compare" type="button" class="inp-btn inp-toggle" aria-pressed="false" title="원본과 결과를 분할선으로 비교 (Generate 후)">Compare</button>
+            </div>
+            <div class="inp-row">
+                <label class="inp-brush">
+                    <span>Brush</span>
+                    <input id="inp-brush" type="range" min="4" max="200" value="40">
+                </label>
+                <span id="inp-status" class="inp-status"></span>
+            </div>
+        </div>
+
+        <button id="t2i-generate" type="button" class="t2i-generate">Generate</button>
+    </section>
+
+</div>

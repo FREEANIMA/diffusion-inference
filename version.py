@@ -1,0 +1,5 @@
+VERSION = "0.1.0"
+AUTHOR = "SAVANA"
+HUGGINGFACE = "honghong3"
+PROJECT_NAME = "MMDIT"
+REPO_NAME = "DiffusionSampling"

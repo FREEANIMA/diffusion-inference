@@ -1,0 +1,131 @@
+<!-- common: 왼쪽 트리 + 가운데 입력 (조각만, common.js가 .page-txt2img 맨 앞에 넣음) -->
+
+<!-- 왼쪽: 스타일 타입 트리 -->
+<aside class="t2i-tree">
+    <div class="t2i-tree-head">
+        <h3 class="t2i-title">Tag Browser</h3>
+        <button id="t2i-tree-toggle" type="button" class="t2i-tree-toggle" aria-label="Tag Browser 접기/펴기">«</button>
+    </div>
+    <input id="t2i-tag-search" class="t2i-tag-search" type="text" placeholder="search tag" spellcheck="false">
+    <div id="t2i-tag-tree" class="t2i-tag-tree">Loading...</div>
+</aside>
+
+<!-- 가운데: 위 = 프롬프트 / 아래 = 조건 -->
+<section class="t2i-controls">
+    <div class="t2i-pane t2i-pane-prompts">
+        <div class="t2i-prompts-head">
+            <span>Prompt</span>
+            <button id="t2i-add-prompt" type="button" class="t2i-add" aria-label="프롬프트 칸 추가">+</button>
+        </div>
+
+        <div id="t2i-prompts" class="t2i-prompts">
+            <div class="t2i-prompt-item">
+                <textarea class="t2i-prompt" rows="4" placeholder="prompt 1"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="t2i-pane t2i-pane-cond">
+        <div class="t2i-params-wrap">
+            <!-- 1행 -->
+            <div class="t2i-params">
+                <label class="t2i-field">
+                    <span>Steps</span>
+                    <input id="t2i-steps" type="number" value="28" min="1">
+                </label>
+                <label class="t2i-field">
+                    <span>CFG</span>
+                    <input id="t2i-cfg" type="number" value="5" step="0.1">
+                </label>
+                <label class="t2i-field">
+                    <span>Seed</span>
+                    <input id="t2i-seed" type="number" value="-1">
+                </label>
+                <label class="t2i-field">
+                    <span>Calc</span>
+                    <select id="t2i-calculate-type">
+                        <option value="euler" selected>euler</option>
+                        <option value="dpmpp_2m">dpmpp_2m</option>
+                        <option value="heun">heun</option>
+                    </select>
+                </label>
+            </div>
+
+            <!-- 2행 -->
+            <div class="t2i-params">
+                <label class="t2i-field t2i-check">
+                    <span>NSFW</span>
+                    <input id="t2i-nsfw" type="checkbox">
+                </label>
+                <label class="t2i-field t2i-check">
+                    <span>Prompt static</span>
+                    <input id="t2i-prompt-static" type="checkbox">
+                </label>
+                <label class="t2i-field t2i-check">
+                    <span>Frame save</span>
+                    <input id="t2i-frame-save" type="checkbox">
+                </label>
+            </div>
+
+            <!-- 3행 -->
+            <div class="t2i-params">
+                <label class="t2i-field" data-size>
+                    <span>Width</span>
+                    <input id="t2i-width" type="number" value="1024" step="64">
+                </label>
+                <label class="t2i-field" data-size>
+                    <span>Height</span>
+                    <input id="t2i-height" type="number" value="1024" step="64">
+                </label>
+                <label class="t2i-field" data-inpaint>
+                    <span>Start-t</span>
+                    <input id="t2i-start-t" type="number" value="1" min="0" max="1" step="0.05">
+                </label>
+            </div>
+        </div>
+
+        <div class="t2i-charts">
+            <figure class="t2i-chart" data-name="sigma">
+                <figcaption>Sigma</figcaption>
+                <canvas></canvas>
+            </figure>
+            <figure class="t2i-chart" data-name="cfg">
+                <figcaption>CFG</figcaption>
+                <canvas></canvas>
+            </figure>
+            <figure class="t2i-chart" data-name="eta">
+                <figcaption>Eta</figcaption>
+                <canvas></canvas>
+            </figure>
+        </div>
+
+        <button id="t2i-revision" type="button" class="t2i-revision">
+            Revision
+        </button>
+
+        <dialog id="t2i-rev" class="t2i-rev">
+            <div class="t2i-rev-box">
+                <div class="t2i-rev-tabs">
+                    <button type="button" class="t2i-rev-tab" data-name="sigma">Sigma</button>
+                    <button type="button" class="t2i-rev-tab" data-name="cfg">CFG</button>
+                    <button type="button" class="t2i-rev-tab" data-name="eta">Eta</button>
+                </div>
+
+                <div id="t2i-rev-hint" class="t2i-rev-hint"></div>
+
+                <div class="t2i-rev-head">
+                    <label class="t2i-rev-fx" for="t2i-rev-expr">f(t) =</label>
+                    <input id="t2i-rev-expr" class="t2i-curve-expr" type="text" spellcheck="false">
+                    <button id="t2i-rev-apply" type="button" class="t2i-curve-apply">Apply</button>
+                </div>
+
+                <canvas id="t2i-rev-canvas" class="t2i-rev-canvas"></canvas>
+                <div id="t2i-rev-msg" class="t2i-curve-msg"></div>
+
+                <div class="t2i-rev-foot">
+                    <button id="t2i-rev-close" type="button" class="t2i-curve-apply">Done</button>
+                </div>
+            </div>
+        </dialog>
+    </div>
+</section>

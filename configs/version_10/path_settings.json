@@ -1,0 +1,11 @@
+{
+    "CKPT_REPO_ID" : "honghong3",
+    "GENERATION_DIR": "generaion",
+    "INPAINTING_DIR": "inpaint",
+    "DETAIL_DIR": "detail",
+    "ERROR_REPORT": "error_report",
+    "CKPT_LOCAL_DIR": "ckpt",
+    "TAG_TYPE_FILENAME" : "tags_type.parquet",
+    "LLM_FILENAME" : "tags_llm.pt",
+    "EMA_FILENAME" : "ema_model.safetensors"
+}

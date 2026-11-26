@@ -1,0 +1,129 @@
+/* inpainting.css — inpainting 전용 */
+@import '../common/common.css';
+
+/* ===== 오른쪽: 번호 / 편집기(또는 결과) / 도구 / 버튼 ===== */
+.page-txt2img .t2i-viewer {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto auto;
+    gap: 0.6rem;
+}
+
+/* 편집기와 결과는 같은 칸(2행)을 번갈아 씀 */
+.page-txt2img .inp-stage,
+.page-txt2img .t2i-viewer .t2i-image {
+    grid-row: 2;
+}
+
+/* display 지정이 hidden 속성을 이기지 않도록 */
+.page-txt2img .t2i-viewer [hidden] {
+    display: none !important;
+}
+
+/* ----- 편집기 ----- */
+.page-txt2img .inp-stage {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+}
+
+.page-txt2img .inp-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    cursor: crosshair;
+    touch-action: none;             /* 터치 드래그가 스크롤로 먹히지 않게 */
+}
+
+.page-txt2img .inp-canvas.panning {
+    cursor: grabbing;
+}
+
+.page-txt2img .inp-drop {
+    position: absolute;
+    inset: 0;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+}
+
+.page-txt2img .inp-stage.dragover {
+    border-color: var(--accent);
+}
+
+/* ----- 도구 ----- */
+.page-txt2img .inp-tools {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.page-txt2img .inp-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.page-txt2img .inp-btn {
+    padding: 0.45rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg);
+}
+
+.page-txt2img .inp-btn:hover {
+    background: var(--hover-bg);
+    border-color: var(--accent);
+}
+
+/* hover보다 아래에 둬야 active가 이김 */
+.page-txt2img .inp-btn.active,
+.page-txt2img .inp-btn[aria-pressed="true"] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-fg);
+}
+
+/* Mask 버튼의 색 표시: 빨강 = 좌클릭(수정), 파랑 = 우클릭(보존) */
+.page-txt2img .inp-dot {
+    display: inline-block;
+    width: 0.65em;
+    height: 0.65em;
+    margin-right: 0.25em;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.6);   /* 선택되어 배경이 accent일 때도 보이게 */
+    vertical-align: baseline;
+}
+
+.page-txt2img .inp-dot.edit { background: #ff3b30; }
+
+.page-txt2img .inp-dot.keep {
+    background: #2f6bff;
+    margin-right: 0.5em;
+}
+
+.page-txt2img .inp-brush {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+}
+
+.page-txt2img .inp-brush input {
+    width: 110px;
+}
+
+.page-txt2img .inp-status {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.8rem;
+    color: var(--muted);
+}
+
+.page-txt2img .inp-status.error {
+    color: #d33;
+}

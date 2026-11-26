@@ -1,0 +1,28 @@
+/* sampling.css — txt2img 전용 */
+@import '../common/common.css';
+
+/* ===== 오른쪽: 이미지판 (3행: 번호 / 이미지 / 버튼) ===== */
+.page-txt2img .t2i-viewer {
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;   /* 번호 / 진행바 / 이미지(나머지) / 버튼 */
+    gap: 0.6rem;
+}
+
+.page-txt2img .t2i-progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    visibility: hidden;          /* 평소엔 자리만 차지하고 안 보이게 */
+}
+.page-txt2img .t2i-progress-wrap.active {
+    visibility: visible;
+}
+.page-txt2img .t2i-progress-wrap progress {
+    flex: 1;
+    height: 0.6rem;
+}
+.page-txt2img .t2i-progress-text {
+    min-width: 4.5rem;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}

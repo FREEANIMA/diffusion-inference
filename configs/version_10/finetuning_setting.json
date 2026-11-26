@@ -1,0 +1,17 @@
+{
+    "NAS": [
+        "style", "person_count", "gender", "species",
+        "hair_color", "hair_length", "hair_style", "eye_color",
+        "body_type", "clothing", "accessory", "background",
+        "pose", "expression", "composition", "gaze", "sex_act"
+    ],
+    "NAS_SHORT": ["style", "person_count", "gender"],
+    "init_prompt" : "general img; ",
+
+    "temperature": 0.7,
+    "top_p": 0.9,
+    "top_k": 10,
+    "max_words": 256,
+
+    "retry" : 5
+}

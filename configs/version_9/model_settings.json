@@ -1,0 +1,15 @@
+{
+    "allowable_size": 1024,
+    "pos_scale": 0.5,
+    "patch_size": 1,
+    "in_channels": 32,
+    "compression_ratio": 32,
+    "hidden_size": 2048,
+    "nhead": 32,
+    "num_layers": 32,
+    "txt_hidden_size": 1024,
+    "sigma_emb_hz": 10000,
+    "rope_hz": 1000,
+    "sigma_scale": 1000,
+    "dropout": 0.0
+}

@@ -891,3 +891,74 @@ function initLayout(root) {
         saveLayout({ topH: null });
     });
 }
+
+// ---- 태그 로딩 (진행 중인 요청은 하나만 공유) ----
+let tagPromise = null;
+
+function loadTags() {
+    if (tagCache) return Promise.resolve(tagCache);
+    tagPromise ??= fetch(`${API_BASE}/api/tags`)
+        .then(res => {
+            if (!res.ok) throw new Error(`tags 로드 실패 (${res.status})`);
+            return res.json();
+        })
+        .then(tags => (tagCache = tags))
+        .catch(err => { tagPromise = null; throw err; });   // 실패하면 다음에 다시 시도
+    return tagPromise;
+}
+
+// 스피너 + 경과 시간. 반환값은 타이머 정리 함수
+function showTagLoading(box) {
+    box.innerHTML =
+        '<div class="t2i-loading"><span class="t2i-spinner"></span>' +
+        '<span class="t2i-loading-text">Loading tags...</span></div>';
+    const text = box.querySelector('.t2i-loading-text');
+    const t0 = performance.now();
+    const timer = setInterval(() => {
+        text.textContent = `Loading tags... ${Math.floor((performance.now() - t0) / 1000)}s`;
+    }, 500);
+    return () => clearInterval(timer);
+}
+
+function initTagBrowser() {
+    const box = document.getElementById('t2i-tag-tree');
+    const search = document.getElementById('t2i-tag-search');
+
+    box.addEventListener('change', e => {
+        const cb = e.target.closest('input[type="checkbox"]');
+        if (!cb) return;
+        if (cb.checked) checkedTags.add(cb.value); else checkedTags.delete(cb.value);
+        toggleTagInPrompt(cb.value, cb.checked);
+    });
+
+    let timer;
+    search.addEventListener('input', () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => tagCache && renderTagBrowser(tagCache, search.value), 150);
+    });
+
+    const load = () => {
+        const stop = tagCache ? null : showTagLoading(box);   // 캐시가 있으면 깜빡이지 않게
+        search.disabled = !tagCache;
+
+        loadTags()
+            .then(tags => renderTagBrowser(tags, search.value))
+            .catch(err => {
+                box.innerHTML = '';
+                const msg = document.createElement('div');
+                msg.className = 't2i-curve-msg error';
+                msg.textContent = err.message;
+                const retry = document.createElement('button');
+                retry.type = 'button';
+                retry.className = 't2i-tag-more';
+                retry.textContent = 'Retry';
+                retry.addEventListener('click', load);
+                box.append(msg, retry);
+            })
+            .finally(() => {
+                stop?.();
+                search.disabled = false;
+            });
+    };
+    load();
+}

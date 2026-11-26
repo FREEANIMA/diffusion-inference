@@ -702,3 +702,32 @@ html.t2i-resizing,
 html.t2i-resizing * {
     user-select: none !important;
 }
+
+/* ===== 로딩 ===== */
+.page-txt2img .t2i-loading {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 0;
+    font-size: 0.85rem;
+    color: var(--muted);
+}
+
+.page-txt2img .t2i-spinner {
+    flex: none;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: t2i-spin 0.8s linear infinite;
+}
+
+@keyframes t2i-spin {
+    to { transform: rotate(360deg); }
+}
+
+.page-txt2img .t2i-tag-search:disabled {
+    opacity: 0.5;
+    cursor: wait;
+}

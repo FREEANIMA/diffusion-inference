@@ -115,7 +115,7 @@ class TagGenration:
 
         for i in range(attempts):
             for idx in pending:
-                
+
                 dups = dups_list[idx]
                 if inferenc_mode or not _satisfied(generation_list[idx]):
                     ids = torch.tensor([self.to_ids(dups)], dtype=torch.long, device=state.config.device)

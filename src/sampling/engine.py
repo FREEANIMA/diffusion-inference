@@ -103,7 +103,7 @@ class SamplingEngine:
                 nsfw=txt2img_input.nsfw,
                 H=txt2img_input.H,
                 W=txt2img_input.W,
-                inferenc_mode=txt2img_input.prompt_static
+                inferenc_mode=not txt2img_input.prompt_static
             )
 
             txt2img_input.prompts = prompts

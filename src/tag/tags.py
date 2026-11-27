@@ -90,7 +90,7 @@ class TagGenration:
             next_id, past = self.one_step(next_id, past=past, step=step + 1)
 
         return [self.id_to_tag[i] for i in generated if i in self.id_to_tag]
-    
+        
     def generation(self, tags, nsfw, H, W, inferenc_mode=False):
         if isinstance(nsfw, bool):
             nsfw = [nsfw] * len(tags)
@@ -100,35 +100,34 @@ class TagGenration:
             for tag in tags
         ]
         unks_list, dups_list = unk_separation(self.dup_map, tags_list)
-        
+
         short = set(state.config.NAS_SHORT)
         attempts = max(1, state.config.retry)
 
         def _types(tags):
             return {self.type_map[t] for t in tags if t in self.type_map}
 
+        def _satisfied(tags):
+            return short <= _types(tags)
+
         generation_list = [list(d) for d in dups_list]
         pending = list(range(len(dups_list)))
-        use_inference = inferenc_mode
 
         for i in range(attempts):
             for idx in pending:
+                
                 dups = dups_list[idx]
-                if use_inference:
+                if inferenc_mode or not _satisfied(generation_list[idx]):
                     ids = torch.tensor([self.to_ids(dups)], dtype=torch.long, device=state.config.device)
                     gen = self.inference(ids=ids)
                     generation_list[idx] = list(dict.fromkeys(dups + gen))
-                else:
-                    generation_list[idx] = dups
 
-            pending = [idx for idx in pending if not short <= _types(generation_list[idx])]
+            pending = [idx for idx in pending if not _satisfied(generation_list[idx])]
             if not pending:
                 break
 
-            use_inference = True 
             missing = {idx: short - _types(generation_list[idx]) for idx in pending}
             log(self.console, f"tags generation retry {i + 1} / {attempts} missing: {missing}")
-
 
         nsfw_text_list = [f"nsfw: {str(n).lower()}; " for n in nsfw]
         size_text_list = [f"size: {H}x{W}; " for _ in nsfw]

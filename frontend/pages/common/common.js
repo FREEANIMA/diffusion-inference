@@ -5,11 +5,95 @@ export const API_BASE = '';
 
 // ===================== 곡선 (sigma / cfg / eta) =====================
 // x = linspace(0, 1, steps + 1), 점 개수 = steps. 유저는 함수식으로만 입력 (점 직접 편집 없음)
+
 const MATH = {
-    sin: Math.sin, cos: Math.cos, tan: Math.tan, acos: Math.acos, exp: Math.exp, log: Math.log,
-    sqrt: Math.sqrt, abs: Math.abs, pow: Math.pow, min: Math.min, max: Math.max, tanh:Math.tanh,
-    floor: Math.floor, pi: Math.PI, e: Math.E, atanh:Math.atanh,
+    // 기본 삼각함수
+    sin: Math.sin,
+    cos: Math.cos,
+    tan: Math.tan,
+    asin: Math.asin,
+    acos: Math.acos,
+    atan: Math.atan,
+    atan2: Math.atan2,
+
+    // 쌍곡선 함수
+    sinh: Math.sinh,
+    cosh: Math.cosh,
+    tanh: Math.tanh,
+    atanh: Math.atanh,
+
+    // 지수 / 로그
+    exp: Math.exp,
+    expm1: Math.expm1,
+    log: Math.log,
+    log1p: Math.log1p,
+    log2: Math.log2,
+    log10: Math.log10,
+
+    // 기본 수학
+    sqrt: Math.sqrt,
+    cbrt: Math.cbrt,
+    abs: Math.abs,
+    sign: Math.sign,
+    pow: Math.pow,
+    min: Math.min,
+    max: Math.max,
+
+    // 반올림
+    floor: Math.floor,
+    ceil: Math.ceil,
+    round: Math.round,
+    trunc: Math.trunc,
+
+    // 상수
+    pi: Math.PI,
+    e: Math.E,
+    ln2: Math.LN2,
+    ln10: Math.LN10,
+    sqrt2: Math.SQRT2,
+
+    // 범위 / 보간
+    clamp: (x, a, b) => Math.max(a, Math.min(b, x)),
+    lerp: (a, b, t) => a + (b - a) * t,
+    invlerp: (a, b, x) => (x - a) / (b - a),
+    remap: (x, a, b, c, d) => c + (d - c) * (x - a) / (b - a),
+
+    // 부드러운 보간
+    smoothstep: (a, b, x) => {
+        const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
+        return t * t * (3 - 2 * t);
+    },
+    smootherstep: (a, b, x) => {
+        const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
+        return t * t * t * (t * (t * 6 - 15) + 10);
+    },
+    cosine: (a, b, t) => a + (b - a) * (1 - Math.cos(Math.PI * t)) / 2,
+    exp_lerp: (a, b, t) => a * Math.pow(b / a, t),
+
+    // 구간 / 펄스
+    step: (edge, x) => x >= edge ? 1 : 0,
+    pulse: (a, b, x) => (x >= a && x < b) ? 1 : 0,
+    deadzone: (x, threshold) => Math.abs(x) < threshold ? 0 : x,
+
+    // 파형
+    fract: x => x - Math.floor(x),
+    mod: (x, n) => ((x % n) + n) % n,
+    reverse: t => 1 - t,
+    triangle: x => 1 - Math.abs(2 * (x - Math.floor(x + 0.5))),
+    square: x => Math.floor(x * 2) % 2,
+    sawtooth: x => x - Math.floor(x),
+    abs_sin: x => Math.abs(Math.sin(2 * Math.PI * x)),
+    cos_wave: x => (1 - Math.cos(2 * Math.PI * x)) / 2,
+    soft_square: (x, sharpness) => Math.tanh(sharpness * Math.sin(2 * Math.PI * x)),
+
+    // 특수 곡선
+    gaussian: (x, center, width) =>
+        Math.exp(-0.5 * Math.pow((x - center) / width, 2)),
+    signed_pow: (x, n) => Math.sign(x) * Math.pow(Math.abs(x), n),
+    pow2: x => x * x,
+    cube: x => x * x * x,
 };
+
 const MATH_NAMES = Object.keys(MATH);
 const ALLOWED = new Set(['t', ...MATH_NAMES]);
 

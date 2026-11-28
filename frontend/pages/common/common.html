@@ -107,27 +107,41 @@
         </button>
 
         <dialog id="t2i-rev" class="t2i-rev">
-            <div class="t2i-rev-box">
-                <div class="t2i-rev-tabs">
-                    <button type="button" class="t2i-rev-tab" data-name="sigma">Sigma</button>
-                    <button type="button" class="t2i-rev-tab" data-name="cfg">CFG</button>
-                    <button type="button" class="t2i-rev-tab" data-name="eta">Eta</button>
+            <div class="t2i-rev-layout">
+                <!-- 왼쪽: 식 입력 + plot -->
+                <div class="t2i-rev-box">
+                    <div class="t2i-rev-tabs">
+                        <button type="button" class="t2i-rev-tab" data-name="sigma">Sigma</button>
+                        <button type="button" class="t2i-rev-tab" data-name="cfg">CFG</button>
+                        <button type="button" class="t2i-rev-tab" data-name="eta">Eta</button>
+                    </div>
+
+                    <div id="t2i-rev-hint" class="t2i-rev-hint"></div>
+
+                    <div class="t2i-rev-head">
+                        <label class="t2i-rev-fx" for="t2i-rev-expr">f(t) =</label>
+                        <input id="t2i-rev-expr" class="t2i-curve-expr" type="text" spellcheck="false">
+                        <button id="t2i-rev-apply" type="button" class="t2i-curve-apply">Apply</button>
+                    </div>
+
+                    <canvas id="t2i-rev-canvas" class="t2i-rev-canvas"></canvas>
+                    <div id="t2i-rev-msg" class="t2i-curve-msg"></div>
+
+                    <div class="t2i-rev-foot">
+                        <button id="t2i-rev-close" type="button" class="t2i-curve-apply">Done</button>
+                    </div>
                 </div>
 
-                <div id="t2i-rev-hint" class="t2i-rev-hint"></div>
-
-                <div class="t2i-rev-head">
-                    <label class="t2i-rev-fx" for="t2i-rev-expr">f(t) =</label>
-                    <input id="t2i-rev-expr" class="t2i-curve-expr" type="text" spellcheck="false">
-                    <button id="t2i-rev-apply" type="button" class="t2i-curve-apply">Apply</button>
-                </div>
-
-                <canvas id="t2i-rev-canvas" class="t2i-rev-canvas"></canvas>
-                <div id="t2i-rev-msg" class="t2i-curve-msg"></div>
-
-                <div class="t2i-rev-foot">
-                    <button id="t2i-rev-close" type="button" class="t2i-curve-apply">Done</button>
-                </div>
+                <!-- 오른쪽: 사용 가능한 함수 도움말 (common.js의 MATH_HELP로 채움) -->
+                <aside class="t2i-rev-help">
+                    <div class="t2i-rev-help-head">
+                        <h4>Functions</h4>
+                        <input id="t2i-rev-help-search" class="t2i-tag-search" type="text"
+                               placeholder="search function" spellcheck="false">
+                        <p class="t2i-rev-help-note">클릭하면 예시가 입력되고 바로 적용돼요</p>
+                    </div>
+                    <div id="t2i-rev-help-list" class="t2i-rev-help-list"></div>
+                </aside>
             </div>
         </dialog>
     </div>

@@ -279,7 +279,7 @@
 
 /* --- 오버레이 --- */
 .page-txt2img .t2i-rev {
-    width: min(760px, 92vw);
+    width: min(1120px, 96vw);          /* 오른쪽 함수 도움말 패널 공간만큼 넓힘 */
     padding: 0;
     border: 1px solid var(--border);
     border-radius: 14px;
@@ -291,11 +291,18 @@
     background: rgba(0, 0, 0, 0.5);
 }
 
+/* 왼쪽 plot | 오른쪽 함수 도움말 */
+.page-txt2img .t2i-rev-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+}
+
 .page-txt2img .t2i-rev-box {
     display: flex;
     flex-direction: column;
     gap: 0.8rem;
     padding: 1rem;
+    min-width: 0;
 }
 
 .page-txt2img .t2i-rev-tabs {
@@ -362,6 +369,98 @@
 .page-txt2img .t2i-rev-foot {
     display: flex;
     justify-content: flex-end;
+}
+
+/* --- 오버레이 오른쪽: 함수 도움말 --- */
+.page-txt2img .t2i-rev-help {
+    contain: size;                     /* 높이는 왼쪽(plot) 기준으로 맞추고, 넘치면 안에서 스크롤 */
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem 1rem 1rem 0.8rem;
+    border-left: 1px solid var(--border);
+}
+
+.page-txt2img .t2i-rev-help-head h4 {
+    margin: 0 0 0.5rem;
+}
+
+.page-txt2img .t2i-rev-help-note {
+    margin: 0 0 0.5rem;
+    font-size: 0.75rem;
+    color: var(--muted);
+}
+
+.page-txt2img .t2i-rev-help-list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 0.3rem;
+}
+
+.page-txt2img .t2i-rev-help-list h4 {
+    margin: 0.8rem 0 0.3rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+}
+
+.page-txt2img .t2i-rev-fn {
+    display: block;
+    width: 100%;
+    margin-bottom: 0.3rem;
+    padding: 0.4rem 0.55rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: inherit;
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 400;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.page-txt2img .t2i-rev-fn:hover {
+    background: var(--hover-bg);
+    border-color: var(--accent);
+}
+
+.page-txt2img .t2i-rev-fn code {
+    display: block;
+    font-family: monospace;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.page-txt2img .t2i-rev-fn span {
+    display: block;
+    margin-top: 0.1rem;
+    color: var(--muted);
+}
+
+.page-txt2img .t2i-rev-fn em {
+    display: block;
+    margin-top: 0.15rem;
+    font-family: monospace;
+    font-style: normal;
+    opacity: 0.85;
+}
+
+/* 좁은 화면: 도움말을 아래로 */
+@media (max-width: 900px) {
+    .page-txt2img .t2i-rev-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .page-txt2img .t2i-rev-help {
+        contain: none;
+        max-height: 260px;
+        border-left: none;
+        border-top: 1px solid var(--border);
+        padding: 0.8rem 1rem 1rem;
+    }
 }
 
 /* ===== 오른쪽 공용: 번호 / 결과 이미지 / Generate ===== */

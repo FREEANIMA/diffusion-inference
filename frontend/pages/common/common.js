@@ -97,6 +97,75 @@ const MATH = {
 const MATH_NAMES = Object.keys(MATH);
 const ALLOWED = new Set(['t', ...MATH_NAMES]);
 
+// Revision 오버레이 오른쪽 도움말용: [시그니처, 설명, 클릭 시 입력될 예시]
+// (예시는 모두 t 하나로 계산되는 식. 새 함수를 MATH에 추가하면 여기에도 한 줄 추가)
+const MATH_HELP = [
+    { group: '변수 / 상수 / 연산', items: [
+        ['t', '0 → 1, 스텝 위치', 'sin(pi*t)'],
+        ['pi, e, ln2, ln10, sqrt2', '상수 (괄호 없이 사용)', 'exp(-e*t)'],
+        ['+  -  *  /  %  ^', '^ 는 거듭제곱', 't^2'],
+    ]},
+    { group: '삼각함수 (라디안)', items: [
+        ['sin(x) cos(x) tan(x)', '삼각함수', 'sin(pi*t)'],
+        ['asin(x) acos(x) atan(x)', '역삼각함수 (asin/acos는 -1~1)', 'atan(5*t)'],
+        ['atan2(y, x)', '두 인자의 각도', 'atan2(t, 1-t)'],
+    ]},
+    { group: '쌍곡선', items: [
+        ['sinh(x) cosh(x) tanh(x)', '쌍곡선 함수. tanh는 -1~1로 포화', 'tanh(4*t)'],
+        ['atanh(x)', '|x| < 1 에서만 유효', 'atanh(0.9*t)'],
+    ]},
+    { group: '지수 / 로그', items: [
+        ['exp(x)', 'e^x', 'exp(-3*t)'],
+        ['expm1(x)', 'exp(x) - 1 (작은 x에서 정밀)', 'expm1(2*t)'],
+        ['log(x)', '자연로그, x > 0', 'log(1 + t)'],
+        ['log1p(x)', 'log(1 + x)', 'log1p(9*t)'],
+        ['log2(x) log10(x)', '밑 2 / 밑 10 로그', 'log10(1 + 9*t)'],
+    ]},
+    { group: '기본 수학', items: [
+        ['sqrt(x) cbrt(x)', '제곱근 / 세제곱근', 'sqrt(t)'],
+        ['abs(x)', '절댓값', 'abs(t - 0.5)'],
+        ['sign(x)', '부호 (-1, 0, 1)', 'sign(t - 0.5)'],
+        ['pow(x, n)', 'x의 n제곱', 'pow(t, 2)'],
+        ['pow2(x) cube(x)', 'x² / x³', 'cube(t)'],
+        ['min(a, b, ...) max(a, b, ...)', '최솟값 / 최댓값', 'max(0, sin(pi*t))'],
+        ['signed_pow(x, n)', '부호 유지 거듭제곱', 'signed_pow(t - 0.5, 3)'],
+    ]},
+    { group: '반올림', items: [
+        ['floor(x) ceil(x)', '내림 / 올림', 'floor(t*4)/4'],
+        ['round(x) trunc(x)', '반올림 / 소수부 버림', 'round(t*4)/4'],
+    ]},
+    { group: '범위 / 보간', items: [
+        ['clamp(x, a, b)', 'x를 a~b로 제한', 'clamp(2*t, 0, 1)'],
+        ['lerp(a, b, t)', 'a → b 선형 보간', 'lerp(1, 0.2, t)'],
+        ['invlerp(a, b, x)', 'a~b 구간을 0~1로 환산', 'invlerp(0.2, 0.8, t)'],
+        ['remap(x, a, b, c, d)', 'a~b 를 c~d 로 매핑', 'remap(t, 0, 1, 0.3, 1)'],
+        ['reverse(t)', '1 - t', 'reverse(t)'],
+    ]},
+    { group: '부드러운 보간', items: [
+        ['smoothstep(a, b, x)', 'a~b 에서 0 → 1 S자 곡선', 'smoothstep(0.2, 0.8, t)'],
+        ['smootherstep(a, b, x)', 'smoothstep보다 끝이 더 완만', 'smootherstep(0.2, 0.8, t)'],
+        ['cosine(a, b, t)', '코사인 보간 a → b', 'cosine(1, 0, t)'],
+        ['exp_lerp(a, b, t)', '지수 보간 (a, b > 0)', 'exp_lerp(1, 0.01, t)'],
+    ]},
+    { group: '구간 / 펄스', items: [
+        ['step(edge, x)', 'x ≥ edge 이면 1, 아니면 0', 'step(0.5, t)'],
+        ['pulse(a, b, x)', 'a ≤ x < b 구간만 1', 'pulse(0, 0.3, t)'],
+        ['deadzone(x, th)', '|x| < th 이면 0', 'deadzone(t - 0.5, 0.1)'],
+    ]},
+    { group: '파형 (주기 1)', items: [
+        ['fract(x) sawtooth(x)', '소수부 (톱니파)', 'fract(3*t)'],
+        ['mod(x, n)', '나머지 (음수도 양수로)', 'mod(t, 0.25)'],
+        ['triangle(x)', '삼각파 0~1', 'triangle(2*t)'],
+        ['square(x)', '사각파 0/1', 'square(2*t)'],
+        ['abs_sin(x)', '|sin(2πx)|', 'abs_sin(t)'],
+        ['cos_wave(x)', '0 → 1 → 0 코사인 파', 'cos_wave(t)'],
+        ['soft_square(x, k)', '부드러운 사각파 (-1~1), k 클수록 날카로움', 'soft_square(t, 5)'],
+    ]},
+    { group: '특수 곡선', items: [
+        ['gaussian(x, center, width)', '종 모양 (최대 1)', 'gaussian(t, 0.5, 0.15)'],
+    ]},
+];
+
 // isPdf : 입력식을 밀도함수로 보고 출력은 CDF 기반 (sigma)
 // plot 기본값
 const curves = {
@@ -408,6 +477,48 @@ function selectTab(name) {
     drawEditor();
 }
 
+// Revision 오버레이 오른쪽 함수 도움말: 목록 그리기 + 검색 + 클릭 시 onPick(예시)
+function initHelp(onPick) {
+    const box = document.getElementById('t2i-rev-help-list');
+    const search = document.getElementById('t2i-rev-help-search');
+
+    const render = q => {
+        const key = q.trim().toLowerCase();
+        box.innerHTML = '';
+        for (const { group, items } of MATH_HELP) {
+            const list = items.filter(([sig, desc]) =>
+                !key || `${sig} ${desc}`.toLowerCase().includes(key));
+            if (!list.length) continue;
+            const h = document.createElement('h4');
+            h.textContent = group;
+            box.appendChild(h);
+            for (const [sig, desc, ex] of list) {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 't2i-rev-fn';
+                b.dataset.example = ex;
+                b.title = '클릭하면 예시가 입력됩니다';
+                const code = document.createElement('code');
+                code.textContent = sig;
+                const d = document.createElement('span');
+                d.textContent = desc;
+                const e = document.createElement('em');
+                e.textContent = ex;
+                b.append(code, d, e);
+                box.appendChild(b);
+            }
+        }
+        if (!box.childElementCount) box.textContent = 'No match';
+    };
+
+    box.addEventListener('click', e => {
+        const b = e.target.closest('.t2i-rev-fn');
+        if (b) onPick(b.dataset.example);
+    });
+    search.addEventListener('input', () => render(search.value));
+    render('');
+}
+
 function initCurves() {
     const root = document.querySelector('.page-txt2img');
 
@@ -434,6 +545,13 @@ function initCurves() {
     };
     document.getElementById('t2i-rev-apply').addEventListener('click', apply);
     ui.input.addEventListener('keydown', e => { if (e.key === 'Enter') apply(); });
+
+    // 함수 도움말: 클릭하면 예시를 입력하고 바로 적용
+    initHelp(ex => {
+        ui.input.value = ex;
+        apply();
+        ui.input.focus();
+    });
 
     document.getElementById('t2i-revision').addEventListener('click', () => {
         ui.dialog.showModal();
